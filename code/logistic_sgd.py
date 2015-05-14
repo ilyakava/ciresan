@@ -45,6 +45,7 @@ import numpy
 import theano
 import theano.tensor as T
 
+import pdb
 
 class LogisticRegression(object):
     """Multi-class Logistic Regression Class
@@ -165,8 +166,18 @@ class LogisticRegression(object):
         else:
             raise NotImplementedError()
 
+def pad_images(set_x, padding):
+    ss = 28 # start_size
+    es = 28 + padding # end_size
+    out = numpy.ndarray((set_x.shape[0], es**2), dtype=numpy.float32)
+    bp = round(padding / 2) # before padding (left)
+    ap = padding - bp # after padding (right)
+    # pdb.set_trace()
+    for i in xrange(0,set_x.shape[0]):
+        out[i] = numpy.pad(set_x[i].reshape((28,28)),((bp,ap),(bp,ap)),mode='constant').reshape(es**2)
+    return out
 
-def load_data(dataset):
+def load_data(dataset, padding=0):
     ''' Loads the dataset
 
     :type dataset: string
@@ -203,6 +214,14 @@ def load_data(dataset):
     # Load the dataset
     f = gzip.open(dataset, 'rb')
     train_set, valid_set, test_set = cPickle.load(f)
+
+    print '... pading data'
+
+    if padding:
+        train_set = (pad_images(train_set[0], padding), train_set[1])
+        valid_set = (pad_images(valid_set[0], padding), valid_set[1])
+        test_set =  (pad_images(test_set[0], padding),  test_set[1])
+
     f.close()
     #train_set, valid_set, test_set format: tuple(input, target)
     #input is an numpy.ndarray of 2 dimensions (a matrix)
