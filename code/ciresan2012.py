@@ -13,7 +13,7 @@ from logistic_sgd import LogisticRegression, load_data
 from mlp import HiddenLayer
 from convolutional_mlp import LeNetConvPoolLayer
 
-def evaluate_ciresan2012(learning_rate=0.001, n_epochs=800,
+def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
                          dataset='mnist.pkl.gz',
                          nkerns=[20, 40], batch_size=500):
     """ Demonstrates lenet on MNIST dataset
@@ -51,7 +51,7 @@ def evaluate_ciresan2012(learning_rate=0.001, n_epochs=800,
 
     # allocate symbolic variables for the data
     index = T.lscalar()  # index to a [mini]batch
-    # TODO anneal learning rate by factor of 0.993 each epoch (for first 500 epochs)
+    learning_rate = T.fscalar()
 
     # start-snippet-1
     x = T.matrix('x')   # the data is presented as rasterized images
@@ -138,7 +138,7 @@ def evaluate_ciresan2012(learning_rate=0.001, n_epochs=800,
     ]
 
     train_model = theano.function(
-        [index],
+        [index, learning_rate],
         cost,
         updates=updates,
         givens={
@@ -173,6 +173,7 @@ def evaluate_ciresan2012(learning_rate=0.001, n_epochs=800,
     done_looping = False
 
     while (epoch < n_epochs) and (not done_looping):
+        cur_learning_rate = numpy.array(init_learning_rate * 0.993**epoch, dtype=numpy.float32)
         epoch = epoch + 1
         for minibatch_index in xrange(n_train_batches):
 
@@ -181,7 +182,7 @@ def evaluate_ciresan2012(learning_rate=0.001, n_epochs=800,
             if iter % 100 == 0:
                 print 'training @ iter = ', iter
             # TODO perform random elastic distortions (Ciresan 2011)
-            cost_ij = train_model(minibatch_index)
+            cost_ij = train_model(minibatch_index, cur_learning_rate)
 
             if (iter + 1) % validation_frequency == 0:
 
