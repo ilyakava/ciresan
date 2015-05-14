@@ -13,7 +13,7 @@ from logistic_sgd import LogisticRegression, load_data
 from mlp import HiddenLayer
 from convolutional_mlp import LeNetConvPoolLayer
 
-def evaluate_ciresan2012(learning_rate=0.1, n_epochs=200,
+def evaluate_ciresan2012(learning_rate=0.001, n_epochs=800,
                          dataset='mnist.pkl.gz',
                          nkerns=[20, 40], batch_size=500):
     """ Demonstrates lenet on MNIST dataset
@@ -34,6 +34,7 @@ def evaluate_ciresan2012(learning_rate=0.1, n_epochs=200,
 
     rng = numpy.random.RandomState(23455)
 
+    # TODO normalize digit width
     datasets = load_data(dataset, 1)
 
     train_set_x, train_set_y = datasets[0]
@@ -50,6 +51,7 @@ def evaluate_ciresan2012(learning_rate=0.1, n_epochs=200,
 
     # allocate symbolic variables for the data
     index = T.lscalar()  # index to a [mini]batch
+    # TODO anneal learning rate by factor of 0.993 each epoch (for first 500 epochs)
 
     # start-snippet-1
     x = T.matrix('x')   # the data is presented as rasterized images
@@ -94,7 +96,7 @@ def evaluate_ciresan2012(learning_rate=0.1, n_epochs=200,
     )
 
     # classify the values of the fully-connected sigmoidal layer
-    # should be softmax
+    # TODO should be softmax
     layer3 = LogisticRegression(input=layer2.output, n_in=150, n_out=10)
 
     # the cost we minimize during training is the NLL of the model
@@ -178,6 +180,7 @@ def evaluate_ciresan2012(learning_rate=0.1, n_epochs=200,
 
             if iter % 100 == 0:
                 print 'training @ iter = ', iter
+            # TODO perform random elastic distortions (Ciresan 2011)
             cost_ij = train_model(minibatch_index)
 
             if (iter + 1) % validation_frequency == 0:
@@ -227,4 +230,5 @@ def evaluate_ciresan2012(learning_rate=0.1, n_epochs=200,
                           ' ran for %.2fm' % ((end_time - start_time) / 60.))
 
 if __name__ == '__main__':
+    # technically, should be trained 5 times per digit width normalization (10, 12, 14, 16, 18, 20)
     evaluate_ciresan2012()
