@@ -224,7 +224,7 @@ def normalized_image(x, normalized_width, end_size):
     # assert sum(sum(x) != 0) == normalized_width
     return pad_image(x, end_size)
 
-def load_data(dataset, padding=0, normalized_width=0, out_image_size=28):
+def load_data(dataset, normalized_width=0, out_image_size=SS):
     ''' Loads the dataset
 
     :type dataset: string
@@ -262,9 +262,9 @@ def load_data(dataset, padding=0, normalized_width=0, out_image_size=28):
     f = gzip.open(dataset, 'rb')
     train_set, valid_set, test_set = cPickle.load(f)
 
-    print '... pading data'
+    print '... preparing data'
 
-    if padding or normalized_width:
+    if normalized_width or (out_image_size != SS):
         train_set = (prepare_images(train_set, out_image_size, normalized_width), train_set[1])
         valid_set = (prepare_images(valid_set, out_image_size, normalized_width), valid_set[1])
         test_set =  (prepare_images(test_set, out_image_size, normalized_width),  test_set[1])

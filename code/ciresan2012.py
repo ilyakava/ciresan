@@ -27,8 +27,8 @@ ALPHA = 36
 
 def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
                          dataset='mnist.pkl.gz',
-                         nkerns=[20, 40], batch_size=500):
-    """ Demonstrates lenet on MNIST dataset
+                         nkerns=[20, 40], batch_size=1000, normalized_width=20):
+    """ Demonstrates Ciresan 2012 on MNIST dataset
 
     :type learning_rate: float
     :param learning_rate: learning rate used (factor for the stochastic
@@ -46,7 +46,7 @@ def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
 
     rng = numpy.random.RandomState(23455)
 
-    datasets = load_data(dataset, padding=1, normalized_width=20, out_image_size=29)
+    datasets = load_data(dataset, normalized_width, 29)
 
     train_set_x, train_set_y = datasets[0]
     valid_set_x, valid_set_y = datasets[1]
@@ -249,4 +249,6 @@ def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
 
 if __name__ == '__main__':
     # technically, should be trained 5 times per digit width normalization (10, 12, 14, 16, 18, 20)
-    evaluate_ciresan2012()
+    batch_size = int(sys.argv[1])
+    normalized_width = int(sys.argv[2])
+    evaluate_ciresan2012(batch_size, normalized_width)
