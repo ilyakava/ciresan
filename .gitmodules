@@ -1,0 +1,3 @@
+[submodule "code/theanet"]
+	path = code/theanet
+	url = git@github.com:ilyakava/theanet.git
