@@ -1,3 +1,8 @@
+"""
+Architecture, Hyper-params: http://arxiv.org/abs/1202.2745
+Width Normalization Details: http://arxiv.org/abs/1103.4487
+"""
+
 import os
 import sys
 import time
@@ -34,8 +39,7 @@ def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
 
     rng = numpy.random.RandomState(23455)
 
-    # TODO normalize digit width
-    datasets = load_data(dataset, 1)
+    datasets = load_data(dataset, padding=1, normalized_width=20, out_image_size=29)
 
     train_set_x, train_set_y = datasets[0]
     valid_set_x, valid_set_y = datasets[1]

@@ -45,7 +45,12 @@ import numpy
 import theano
 import theano.tensor as T
 
+from PIL import Image
+import scipy.misc
+
 import pdb
+
+SS = 28 # start size of mnist input data
 
 class LogisticRegression(object):
     """Multi-class Logistic Regression Class
@@ -166,18 +171,60 @@ class LogisticRegression(object):
         else:
             raise NotImplementedError()
 
-def pad_images(set_x, padding):
-    ss = 28 # start_size
-    es = 28 + padding # end_size
-    out = numpy.ndarray((set_x.shape[0], es**2), dtype=numpy.float32)
-    bp = round(padding / 2) # before padding (left)
-    ap = padding - bp # after padding (right)
-    # pdb.set_trace()
+def prepare_images(sets, end_size, normalized_width):
+    set_x, set_y = sets[0], sets[1]
+    out = numpy.ndarray((set_x.shape[0], end_size**2), dtype=numpy.float32)
+
     for i in xrange(0,set_x.shape[0]):
-        out[i] = numpy.pad(set_x[i].reshape((28,28)),((bp,ap),(bp,ap)),mode='constant').reshape(es**2)
+        x = set_x[i].reshape((SS,SS))
+        if normalized_width and (set_y[i] - 1): # don't normalize images of digit '1'
+            out[i] = normalized_image(x, normalized_width, end_size).reshape(end_size**2)
+        else:
+            out[i] = pad_image(x, end_size).reshape(end_size**2)
     return out
 
-def load_data(dataset, padding=0):
+def pad_image(x, end_size):
+    """
+    resizes the image x to end_size by either pading or unpadding
+    the edges of the image. Returns a flat array.
+
+    input x should be a square numpy array
+
+    assume square image, so bp and ap can never be
+    positive and negative combos (only + and 0, or - and 0)
+    """
+    cs = x.shape[0]
+    padding = end_size - cs
+    bp = round(padding / 2) # before padding (left)
+    ap = padding - bp # after padding (right)
+    pads = (bp,ap)
+    if bp + ap > 0:
+        return numpy.pad(x,(pads,pads),mode='constant').reshape(end_size**2)
+    else: # image is too big now, unpad/slice
+        si = -bp # start index
+        ei = cs + ap # end index
+        return x[si:ei, si:ei].reshape(end_size**2)
+
+def normalized_image(x, normalized_width, end_size):
+    """
+    Stretches the image so that the width of the bounding box of the digit
+    equals normalized_width, then resizes to end_size with pad_image
+
+    input x should be a square numpy array
+    """
+    width_diff = normalized_width - sum(sum(x) != 0) # num non-zero col-sums (there are no discontinuous numbers)
+    if width_diff:
+        nd = SS + width_diff # new dim
+        new_size = nd, nd
+        im = scipy.misc.toimage(x)
+        normalized_image = im.resize(new_size, Image.ANTIALIAS)
+        x = numpy.array(normalized_image.getdata(), dtype=numpy.float32).reshape((nd,nd)) / 255
+    # based on my visual inspection, this assertion should pass, but doesn't
+    # perhaps b/c of the smoothing that goes on with the resizing filter
+    # assert sum(sum(x) != 0) == normalized_width
+    return pad_image(x, end_size)
+
+def load_data(dataset, padding=0, normalized_width=0, out_image_size=28):
     ''' Loads the dataset
 
     :type dataset: string
@@ -217,10 +264,10 @@ def load_data(dataset, padding=0):
 
     print '... pading data'
 
-    if padding:
-        train_set = (pad_images(train_set[0], padding), train_set[1])
-        valid_set = (pad_images(valid_set[0], padding), valid_set[1])
-        test_set =  (pad_images(test_set[0], padding),  test_set[1])
+    if padding or normalized_width:
+        train_set = (prepare_images(train_set, out_image_size, normalized_width), train_set[1])
+        valid_set = (prepare_images(valid_set, out_image_size, normalized_width), valid_set[1])
+        test_set =  (prepare_images(test_set, out_image_size, normalized_width),  test_set[1])
 
     f.close()
     #train_set, valid_set, test_set format: tuple(input, target)
@@ -310,8 +357,8 @@ def sgd_optimization_mnist(learning_rate=0.13, n_epochs=1000,
     y = T.ivector('y')  # labels, presented as 1D vector of [int] labels
 
     # construct the logistic regression class
-    # Each MNIST image has size 28*28
-    classifier = LogisticRegression(input=x, n_in=28 * 28, n_out=10)
+    # Each MNIST image has size SS*SS
+    classifier = LogisticRegression(input=x, n_in=SS * SS, n_out=10)
 
     # the cost we minimize during training is the negative log likelihood of
     # the model in symbolic format
