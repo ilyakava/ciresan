@@ -1,6 +1,7 @@
 """
 Architecture, Hyper-params: http://arxiv.org/abs/1202.2745
-Width Normalization Details: http://arxiv.org/abs/1103.4487
+Width Normalization, Elastic distortion Hyper-params: http://arxiv.org/abs/1103.4487
+Elastic Distortion methodology: http://research.microsoft.com/pubs/68920/icdar03.pdf
 """
 
 import os
@@ -17,6 +18,12 @@ from theano.tensor.nnet import conv
 from logistic_sgd import LogisticRegression, load_data
 from mlp import HiddenLayer
 from convolutional_mlp import LeNetConvPoolLayer
+
+from theanet.theanet.layer.layer import Layer
+from theanet.theanet.layer.inlayers import ElasticLayer
+
+SIGMA = 6
+ALPHA = 36
 
 def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
                          dataset='mnist.pkl.gz',
@@ -67,7 +74,14 @@ def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
     ######################
     print '... building the model'
 
-    layer0_input = x.reshape((batch_size, 1, 29, 29))
+    distortion_layer = ElasticLayer(
+        x.reshape((batch_size, 29, 29)),
+        29,
+        magnitude=ALPHA,
+        sigma=SIGMA
+    )
+
+    layer0_input = distortion_layer.output.reshape((batch_size, 1, 29, 29))
 
     layer0 = LeNetConvPoolLayer(
         rng,
@@ -184,7 +198,7 @@ def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
 
             if iter % 100 == 0:
                 print 'training @ iter = ', iter
-            # TODO perform random elastic distortions (Ciresan 2011)
+
             cost_ij = train_model(minibatch_index, cur_learning_rate)
 
             if (iter + 1) % validation_frequency == 0:
