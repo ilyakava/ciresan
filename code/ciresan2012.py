@@ -27,7 +27,7 @@ ALPHA = 36
 
 def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
                          dataset='mnist.pkl.gz',
-                         nkerns=[20, 40], batch_size=1000, normalized_width=20):
+                         nkerns=[20, 40], batch_size=1000, normalized_width=20, distortion=0):
     """ Demonstrates Ciresan 2012 on MNIST dataset
 
     :type learning_rate: float
@@ -74,14 +74,17 @@ def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
     ######################
     print '... building the model'
 
-    distortion_layer = ElasticLayer(
-        x.reshape((batch_size, 29, 29)),
-        29,
-        magnitude=ALPHA,
-        sigma=SIGMA
-    )
+    if distortion:
+        distortion_layer = ElasticLayer(
+            x.reshape((batch_size, 29, 29)),
+            29,
+            magnitude=ALPHA,
+            sigma=SIGMA
+        )
 
-    layer0_input = distortion_layer.output.reshape((batch_size, 1, 29, 29))
+        layer0_input = distortion_layer.output.reshape((batch_size, 1, 29, 29))
+    else:
+        layer0_input = x.reshape((batch_size, 1, 29, 29))
 
     layer0 = LeNetConvPoolLayer(
         rng,
@@ -251,4 +254,5 @@ if __name__ == '__main__':
     # technically, should be trained 5 times per digit width normalization (10, 12, 14, 16, 18, 20)
     batch_size = int(sys.argv[1])
     normalized_width = int(sys.argv[2])
-    evaluate_ciresan2012(batch_size, normalized_width)
+    distortion = int(sys.argv[3])
+    evaluate_ciresan2012(batch_size=batch_size, normalized_width=normalized_width, distortion=distortion)
