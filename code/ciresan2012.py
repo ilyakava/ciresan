@@ -100,7 +100,6 @@ def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
     )
 
     # classify the values of the fully-connected sigmoidal layer
-    # TODO should be softmax
     layer3 = LogisticRegression(input=layer2.output, n_in=150, n_out=10)
 
     # the cost we minimize during training is the NLL of the model
