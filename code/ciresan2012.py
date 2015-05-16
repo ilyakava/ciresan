@@ -22,7 +22,7 @@ from convolutional_mlp import LeNetConvPoolLayer
 from theanet.theanet.layer.layer import Layer
 from theanet.theanet.layer.inlayers import ElasticLayer
 
-SIGMA = 6
+SIGMA = 8
 ALPHA = 36
 
 def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
