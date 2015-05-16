@@ -37,7 +37,7 @@ def distortions(datasets, sigma, alpha):
 
     return [data.reshape((batch_size,29,29)), dist_data]
 
-def plot_matrix_of_images(mtrx):
+def plot_matrix_of_images(mtrx, name):
     nrow = len(mtrx)
     ncol = mtrx[0].shape[0]
     fig, axarr = plt.subplots(nrow, ncol, figsize=(ncol, nrow), subplot_kw={'xticks': [], 'yticks': []})
@@ -48,9 +48,7 @@ def plot_matrix_of_images(mtrx):
         for ci in xrange(ncol):
             axarr[ri, ci].imshow(imgs[ci], **kwargs)
 
-    plt.savefig("test.png",bbox_inches='tight')
-
-
+    plt.savefig('plots/'+name+".png",bbox_inches='tight')
 
 if __name__ == '__main__':
     datasets = load_data(dataset, normalized_width, 29)
@@ -64,5 +62,18 @@ if __name__ == '__main__':
         distortions(datasets, 6, 36)[1],
         distortions(datasets, 5, 36)[1]
     ]
-    plot_matrix_of_images(distorted)
+    plot_matrix_of_images(distorted, 'distortions_9_to_5')
+
+    first = distortions(datasets, 8, 36)
+    distorted = [
+        first[0],
+        first[1],
+        distortions(datasets, 8, 36)[1],
+        distortions(datasets, 8, 36)[1],
+        distortions(datasets, 8, 36)[1],
+        distortions(datasets, 8, 36)[1]
+    ]
+    plot_matrix_of_images(distorted, 'distortions_8_sampled')
+
+
     # pdb.set_trace()
