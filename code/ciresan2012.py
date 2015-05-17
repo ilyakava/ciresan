@@ -31,6 +31,7 @@ ALPHA = 36
 def save_model(name, params):
     f = open('./models/'+name+'.pkl', 'wb')
     for param in params:
+        print 'a'
         cPickle.dump(param.get_value(borrow=True), f, -1)
     f.close()
 
@@ -252,7 +253,7 @@ def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
 
     end_time = time.clock()
     print('Optimization complete.')
-    name = 'ciresan2012_bs%i_nw%i_d%i' % (batch_size, normalized_width, distortion)
+    name = 'ciresan2012_bs%i_nw%i_d%i_%iLayers' % (batch_size, normalized_width, distortion, len(params) / 2)
     print('Saving Model as "%s"...' % name)
     save_model(name, params)
     print('Best validation score of %f %% obtained at iteration %i, '
