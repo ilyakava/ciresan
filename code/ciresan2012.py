@@ -31,6 +31,7 @@ ALPHA = 36
 def save_model(name, params):
     f = open('./models/'+name+'.pkl', 'wb')
     for param in params:
+        pdb.set_trace()
         print 'a'
         cPickle.dump(param.get_value(borrow=True), f, -1)
     f.close()
