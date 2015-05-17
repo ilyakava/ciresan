@@ -22,8 +22,15 @@ from convolutional_mlp import LeNetConvPoolLayer
 from theanet.theanet.layer.layer import Layer
 from theanet.theanet.layer.inlayers import ElasticLayer
 
+import cPickle
+
 SIGMA = 8
 ALPHA = 36
+
+def save_model(name, params):
+    f = open('./models/'+name+'.pkl', 'wb')
+    cPickle.dump(params, f, -1)
+
 
 def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
                          dataset='mnist.pkl.gz',
@@ -243,6 +250,10 @@ def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
 
     end_time = time.clock()
     print('Optimization complete.')
+    name = 'ciresan2012_bs%i_nw%i_d%i' % (batch_size, normalized_width, distortion)
+    print('Saving Model as "%s"...' % name)
+    pdb.set_trace()
+    save_model(name, params)
     print('Best validation score of %f %% obtained at iteration %i, '
           'with test performance %f %%' %
           (best_validation_loss * 100., best_iter + 1, test_score * 100.))
@@ -255,4 +266,5 @@ if __name__ == '__main__':
     batch_size = int(sys.argv[1])
     normalized_width = int(sys.argv[2])
     distortion = int(sys.argv[3])
-    evaluate_ciresan2012(batch_size=batch_size, normalized_width=normalized_width, distortion=distortion)
+    n_epochs = int(sys.argv[4])
+    evaluate_ciresan2012(batch_size=batch_size, normalized_width=normalized_width, distortion=distortion, n_epochs=n_epochs)
