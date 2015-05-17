@@ -23,6 +23,7 @@ from theanet.theanet.layer.layer import Layer
 from theanet.theanet.layer.inlayers import ElasticLayer
 
 import cPickle
+import pdb
 
 SIGMA = 8
 ALPHA = 36
