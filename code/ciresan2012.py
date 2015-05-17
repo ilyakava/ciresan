@@ -22,8 +22,22 @@ from convolutional_mlp import LeNetConvPoolLayer
 from theanet.theanet.layer.layer import Layer
 from theanet.theanet.layer.inlayers import ElasticLayer
 
+import cPickle
+import collections
+
+import pdb
+
 SIGMA = 8
 ALPHA = 36
+
+def save_model(name, params):
+    """
+    Will need to load last layer W,b to first layer W,b
+    """
+    f = open('./models/'+name+'.pkl', 'wb')
+    for param in params:
+        cPickle.dump(param.get_value(borrow=True), f, -1)
+    f.close()
 
 def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
                          dataset='mnist.pkl.gz',
@@ -243,6 +257,9 @@ def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
 
     end_time = time.clock()
     print('Optimization complete.')
+    name = 'ciresan2012_bs%i_nw%i_d%i_%iLayers' % (batch_size, normalized_width, distortion, len(params) / 2)
+    print('Saving Model as "%s"...' % name)
+    save_model(name, params)
     print('Best validation score of %f %% obtained at iteration %i, '
           'with test performance %f %%' %
           (best_validation_loss * 100., best_iter + 1, test_score * 100.))
@@ -252,7 +269,11 @@ def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
 
 if __name__ == '__main__':
     # technically, should be trained 5 times per digit width normalization (10, 12, 14, 16, 18, 20)
-    batch_size = int(sys.argv[1])
-    normalized_width = int(sys.argv[2])
-    distortion = int(sys.argv[3])
-    evaluate_ciresan2012(batch_size=batch_size, normalized_width=normalized_width, distortion=distortion)
+    arg_names = ['command', 'batch_size', 'normalized_width', 'distortion', 'n_epochs']
+    arg = dict(zip(arg_names, sys.argv))
+
+    batch_size = int(arg.get('batch_size') or 100)
+    normalized_width = int(arg.get('normalized_width') or 20)
+    distortion = int(arg.get('distortion') or 1)
+    n_epochs = int(arg.get('n_epochs') or 800) # useful to change for a quick test run
+    evaluate_ciresan2012(batch_size=batch_size, normalized_width=normalized_width, distortion=distortion, n_epochs=n_epochs)
