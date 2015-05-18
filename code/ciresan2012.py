@@ -41,7 +41,7 @@ def save_model(name, params):
 
 def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
                          dataset='mnist.pkl.gz',
-                         nkerns=[20, 40], batch_size=1000, normalized_width=20, distortion=0):
+                         nkerns=[32, 48], batch_size=1000, normalized_width=20, distortion=0, cuda_convnet=1):
     """ Demonstrates Ciresan 2012 on MNIST dataset
 
     :type learning_rate: float
@@ -96,16 +96,22 @@ def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
             sigma=SIGMA
         )
 
-        layer0_input = distortion_layer.output.reshape((batch_size, 1, 29, 29))
+        network_input = distortion_layer.output.reshape((batch_size, 1, 29, 29))
     else:
-        layer0_input = x.reshape((batch_size, 1, 29, 29))
+        network_input = x.reshape((batch_size, 1, 29, 29))
+
+    if cuda_convnet:
+        layer0_input = network_input.dimshuffle(1, 2, 3, 0)
+    else:
+        layer0_input = network_input
 
     layer0 = LeNetConvPoolLayer(
         rng,
         input=layer0_input,
         image_shape=(batch_size, 1, 29, 29),
         filter_shape=(nkerns[0], 1, 4, 4),
-        poolsize=(2, 2)
+        poolsize=(2, 2),
+        cuda_convnet=cuda_convnet
     )
 
     layer1 = LeNetConvPoolLayer(
@@ -113,14 +119,18 @@ def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
         input=layer0.output,
         image_shape=(batch_size, nkerns[0], 13, 13),
         filter_shape=(nkerns[1], nkerns[0], 5, 5),
-        poolsize=(3, 3)
+        poolsize=(3, 3),
+        cuda_convnet=cuda_convnet
     )
 
     # the HiddenLayer being fully-connected, it operates on 2D matrices of
     # shape (batch_size, num_pixels) (i.e matrix of rasterized images).
     # This will generate a matrix of shape (batch_size, nkerns[1] * 4 * 4),
     # or (500, 50 * 4 * 4) = (500, 800) with the default values.
-    layer2_input = layer1.output.flatten(2)
+    if cuda_convnet:
+        layer2_input = layer1.output.dimshuffle(3, 0, 1, 2).flatten(2)
+    else:
+        layer2_input = layer1.output.flatten(2)
 
     layer2 = HiddenLayer(
         rng,
@@ -257,7 +267,7 @@ def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
 
     end_time = time.clock()
     print('Optimization complete.')
-    name = 'ciresan2012_bs%i_nw%i_d%i_%iLayers' % (batch_size, normalized_width, distortion, len(params) / 2)
+    name = 'ciresan2012_bs%i_nw%i_d%i_%iLayers_cc%i' % (batch_size, normalized_width, distortion, len(params) / 2, cuda_convnet)
     print('Saving Model as "%s"...' % name)
     save_model(name, params)
     print('Best validation score of %f %% obtained at iteration %i, '
@@ -268,12 +278,15 @@ def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
                           ' ran for %.2fm' % ((end_time - start_time) / 60.))
 
 if __name__ == '__main__':
-    # technically, should be trained 5 times per digit width normalization (10, 12, 14, 16, 18, 20)
-    arg_names = ['command', 'batch_size', 'normalized_width', 'distortion', 'n_epochs']
+    # Should be trained 5 times per digit width normalization (10, 12, 14, 16, 18, 20)
+    arg_names = ['command', 'batch_size', 'normalized_width', 'distortion', 'cuda_convnet', 'n_epochs']
     arg = dict(zip(arg_names, sys.argv))
 
     batch_size = int(arg.get('batch_size') or 100)
     normalized_width = int(arg.get('normalized_width') or 20)
     distortion = int(arg.get('distortion') or 1)
-    n_epochs = int(arg.get('n_epochs') or 800) # useful to change for a quick test run
-    evaluate_ciresan2012(batch_size=batch_size, normalized_width=normalized_width, distortion=distortion, n_epochs=n_epochs)
+    cuda_convnet = int(arg.get('cuda_convnet') or 1)
+    n_epochs = int(arg.get('n_epochs') or 800) # useful to change to 1 for a quick test run
+
+    evaluate_ciresan2012(batch_size=batch_size, normalized_width=normalized_width,
+                         distortion=distortion, n_epochs=n_epochs, cuda_convnet=cuda_convnet)

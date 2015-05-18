@@ -30,7 +30,12 @@ import numpy
 import theano
 import theano.tensor as T
 from theano.tensor.signal import downsample
+
 from theano.tensor.nnet import conv
+
+from pylearn2.sandbox.cuda_convnet.filter_acts import FilterActs
+from pylearn2.sandbox.cuda_convnet.pool import MaxPool
+from theano.sandbox.cuda.basic_ops import gpu_contiguous
 
 from logistic_sgd import LogisticRegression, load_data
 from mlp import HiddenLayer
@@ -39,7 +44,7 @@ from mlp import HiddenLayer
 class LeNetConvPoolLayer(object):
     """Pool Layer of a convolutional network """
 
-    def __init__(self, rng, input, filter_shape, image_shape, poolsize=(2, 2)):
+    def __init__(self, rng, input, filter_shape, image_shape, poolsize=(2, 2), cuda_convnet=0):
         """
         Allocate a LeNetConvPoolLayer with shared variable internal parameters.
 
@@ -87,25 +92,39 @@ class LeNetConvPoolLayer(object):
         self.b = theano.shared(value=b_values, borrow=True)
 
         # convolve input feature maps with filters
-        conv_out = conv.conv2d(
-            input=input,
-            filters=self.W,
-            filter_shape=filter_shape,
-            image_shape=image_shape
-        )
+        if cuda_convnet:
+            conv_op = FilterActs(partial_sum=1)
+            contiguous_input = gpu_contiguous(input)
+            contiguous_filters = gpu_contiguous(self.W)
+            conv_out = conv_op(contiguous_input, contiguous_filters)
+        else:
+            conv_out = conv.conv2d(
+                input=input,
+                filters=self.W,
+                filter_shape=filter_shape,
+                image_shape=image_shape
+            )
 
         # downsample each feature map individually, using maxpooling
-        pooled_out = downsample.max_pool_2d(
-            input=conv_out,
-            ds=poolsize,
-            ignore_border=True
-        )
+        if cuda_convnet:
+            pool_op = MaxPool(ds=poolsize[0], stride=poolsize[1])
+            contiguous_input = gpu_contiguous(conv_out)
+            pooled_out = pool_op(contiguous_input)
+        else:
+            pooled_out = downsample.max_pool_2d(
+                input=conv_out,
+                ds=poolsize,
+                ignore_border=True
+            )
 
         # add the bias term. Since the bias is a vector (1D array), we first
         # reshape it to a tensor of shape (1, n_filters, 1, 1). Each bias will
         # thus be broadcasted across mini-batches and feature map
         # width & height
-        self.output = T.tanh(pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
+        if if cuda_convnet:
+            self.output = T.tanh(pooled_out + self.b.dimshuffle(0, 'x', 'x', 'x'))
+        else:
+            self.output = T.tanh(pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
 
         # store parameters of this layer
         self.params = [self.W, self.b]
