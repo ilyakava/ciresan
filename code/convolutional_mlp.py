@@ -65,8 +65,8 @@ class LeNetConvPoolLayer(object):
         :type poolsize: tuple or list of length 2
         :param poolsize: the downsampling (pooling) factor (#rows, #cols)
         """
-
-        assert image_shape[1] == filter_shape[1]
+        channels_idx = 0 if cuda_convnet else 1
+        assert image_shape[channels_idx] == filter_shape[channels_idx]
         self.input = input
 
         # there are "num input feature maps * filter height * filter width"
