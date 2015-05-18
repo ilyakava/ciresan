@@ -105,20 +105,26 @@ def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
     else:
         layer0_input = network_input
 
+    layer0_imageshape = (1, 29, 29, batch_size) if cuda_convnet else (batch_size, 1, 29, 29)
+    layer0_filtershape = (1, 4, 4, nkerns[0]) if cuda_convnet else (nkerns[0], 1, 4, 4)
+
     layer0 = LeNetConvPoolLayer(
         rng,
         input=layer0_input,
-        image_shape=(batch_size, 1, 29, 29),
-        filter_shape=(nkerns[0], 1, 4, 4),
+        image_shape=layer0_imageshape,
+        filter_shape=layer0_filtershape,
         poolsize=(2, 2),
         cuda_convnet=cuda_convnet
     )
 
+    layer1_imageshape = (nkerns[0], 13, 13, batch_size) if cuda_convnet else (batch_size, nkerns[0], 13, 13)
+    layer1_filtershape = (nkerns[0], 5, 5, nkerns[1]) if cuda_convnet else (nkerns[1], nkerns[0], 5, 5)
+
     layer1 = LeNetConvPoolLayer(
         rng,
         input=layer0.output,
-        image_shape=(batch_size, nkerns[0], 13, 13),
-        filter_shape=(nkerns[1], nkerns[0], 5, 5),
+        image_shape=layer1_imageshape,
+        filter_shape=layer1_filtershape,
         poolsize=(3, 3),
         cuda_convnet=cuda_convnet
     )
