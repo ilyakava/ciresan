@@ -121,7 +121,7 @@ class LeNetConvPoolLayer(object):
         # reshape it to a tensor of shape (1, n_filters, 1, 1). Each bias will
         # thus be broadcasted across mini-batches and feature map
         # width & height
-        if if cuda_convnet:
+        if cuda_convnet:
             self.output = T.tanh(pooled_out + self.b.dimshuffle(0, 'x', 'x', 'x'))
         else:
             self.output = T.tanh(pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
