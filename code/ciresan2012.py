@@ -30,13 +30,15 @@ import pdb
 SIGMA = 8
 ALPHA = 36
 
-def save_model(name, params):
+def save_model(name, theano_params, params):
     """
     Will need to load last layer W,b to first layer W,b
     """
     f = open('./models/'+name+'.pkl', 'wb')
-    for param in params:
+    for param in theano_params:
         cPickle.dump(param.get_value(borrow=True), f, -1)
+    for param in params:
+        cPickle.dump(param, f, -1)
     f.close()
 
 def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
@@ -275,8 +277,7 @@ def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
     print('Optimization complete.')
     name = 'ciresan2012_bs%i_nw%i_d%i_%iLayers_cc%i' % (batch_size, normalized_width, distortion, len(params) / 2, cuda_convnet)
     print('Saving Model as "%s"...' % name)
-    pdb.set_trace()
-    save_model(name, params + [normalized_width, cuda_convnet])
+    save_model(name, params, [normalized_width, cuda_convnet])
     print('Best validation score of %f %% obtained at iteration %i, '
           'with test performance %f %%' %
           (best_validation_loss * 100., best_iter + 1, test_score * 100.))
