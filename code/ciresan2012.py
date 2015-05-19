@@ -36,9 +36,11 @@ def save_model(name, theano_params, params):
     """
     f = open('./models/'+name+'.pkl', 'wb')
 
-    cPickle.dump([theano_params.get_value(borrow=True) for param in theano_params], f, -1)
+    cPickle.dump([param.get_value(borrow=True) for param in theano_params], f, -1)
     cPickle.dump(params, f, -1)
     f.close()
+
+# class Ciresan2012Column
 
 def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
                          dataset='mnist.pkl.gz',
