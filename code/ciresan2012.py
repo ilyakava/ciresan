@@ -35,10 +35,9 @@ def save_model(name, theano_params, params):
     Will need to load last layer W,b to first layer W,b
     """
     f = open('./models/'+name+'.pkl', 'wb')
-    for param in theano_params:
-        cPickle.dump(param.get_value(borrow=True), f, -1)
-    for param in params:
-        cPickle.dump(param, f, -1)
+
+    cPickle.dump([theano_params.get_value(borrow=True) for param in theano_params], f, -1)
+    cPickle.dump(params, f, -1)
     f.close()
 
 def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
