@@ -290,8 +290,8 @@ if __name__ == '__main__':
 
     batch_size = int(arg.get('batch_size') or 100)
     normalized_width = int(arg.get('normalized_width') or 20)
-    distortion = int(arg.get('distortion') or 1)
-    cuda_convnet = int(arg.get('cuda_convnet') or 1)
+    distortion = int(arg.get('distortion') or 0)
+    cuda_convnet = int(arg.get('cuda_convnet') or 0)
     n_epochs = int(arg.get('n_epochs') or 800) # useful to change to 1 for a quick test run
 
     evaluate_ciresan2012(batch_size=batch_size, normalized_width=normalized_width,
