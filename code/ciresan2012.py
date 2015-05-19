@@ -68,11 +68,11 @@ class Ciresan2012Column(object):
 
         # compute number of minibatches for training, validation and testing
         self.n_train_batches = train_set_x.get_value(borrow=True).shape[0]
-        n_valid_batches = valid_set_x.get_value(borrow=True).shape[0]
-        n_test_batches = test_set_x.get_value(borrow=True).shape[0]
+        self.n_valid_batches = valid_set_x.get_value(borrow=True).shape[0]
+        self.n_test_batches = test_set_x.get_value(borrow=True).shape[0]
         self.n_train_batches /= batch_size
-        n_valid_batches /= batch_size
-        n_test_batches /= batch_size
+        self.n_valid_batches /= batch_size
+        self.n_test_batches /= batch_size
 
         # allocate symbolic variables for the data
         index = T.lscalar()  # index to a [mini]batch
@@ -236,7 +236,7 @@ class Ciresan2012Column(object):
 
                     # compute zero-one loss on validation set
                     validation_losses = [self.validate_model(i) for i
-                                         in xrange(n_valid_batches)]
+                                         in xrange(self.n_valid_batches)]
                     this_validation_loss = numpy.mean(validation_losses)
                     print('epoch %i, minibatch %i/%i, validation error %f %%' %
                           (epoch, minibatch_index + 1, self.n_train_batches,
@@ -257,7 +257,7 @@ class Ciresan2012Column(object):
                         # test it on the test set
                         test_losses = [
                             self.test_model(i)
-                            for i in xrange(n_test_batches)
+                            for i in xrange(self.n_test_batches)
                         ]
                         test_score = numpy.mean(test_losses)
                         print(('     epoch %i, minibatch %i/%i, test error of '
