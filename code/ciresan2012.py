@@ -275,6 +275,7 @@ def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
     print('Optimization complete.')
     name = 'ciresan2012_bs%i_nw%i_d%i_%iLayers_cc%i' % (batch_size, normalized_width, distortion, len(params) / 2, cuda_convnet)
     print('Saving Model as "%s"...' % name)
+    pdb.set_trace()
     save_model(name, params + [normalized_width, cuda_convnet])
     print('Best validation score of %f %% obtained at iteration %i, '
           'with test performance %f %%' %
