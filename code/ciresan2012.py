@@ -60,10 +60,13 @@ class Ciresan2012Column(object):
 
         rng = numpy.random.RandomState(23455)
 
+        # TODO: could make this a theano sym variable to abstract
+        # loaded data from column instantiation
         train_set_x, train_set_y = datasets[0]
         valid_set_x, valid_set_y = datasets[1]
         test_set_x, test_set_y = datasets[2]
 
+        # TODO: could move this to train method
         # compute number of minibatches for training, validation and testing
         self.n_train_batches = train_set_x.get_value(borrow=True).shape[0]
         self.n_valid_batches = valid_set_x.get_value(borrow=True).shape[0]
