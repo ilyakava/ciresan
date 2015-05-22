@@ -8,7 +8,9 @@ import theano.tensor as T
 from logistic_sgd import load_data
 from ciresan2012 import Ciresan2012Column
 
-def test_columns(models, dataset='mnist.pkl.gz'):
+import pdb
+
+def test_columns(exclude_mode, models, dataset='mnist.pkl.gz'):
     # create data hash that will be filled with data from different normalizations
     all_datasets = {}
     # instantiate multiple columns
@@ -33,7 +35,17 @@ def test_columns(models, dataset='mnist.pkl.gz'):
     predictions = numpy.argmax(avg_output, axis=1)
     # output labels and acc
     pred = T.ivector('pred')
-    true_labels = all_datasets.values()[0][2][1][:]
+
+    all_true_labels_length = theano.function([], all_datasets.values()[0][2][1].shape)
+    remainder = all_true_labels_length() - len(predictions)
+    if exclude_mode and remainder:
+        print '... Excluding FIRST %i points' % remainder
+        true_labels = all_datasets.values()[0][2][1][remainder:]
+    elif remainder:
+        print '... Excluding LAST %i points' % remainder
+        true_labels = all_datasets.values()[0][2][1][:len(predictions)]
+    else:
+        true_labels = all_datasets.values()[0][2][1][:]
 
     error = theano.function([pred], T.mean(T.neq(pred, true_labels)))
     acc = error(predictions.astype(dtype=numpy.int32))
@@ -42,7 +54,7 @@ def test_columns(models, dataset='mnist.pkl.gz'):
 
 if __name__ == '__main__':
     # example:
-    # python code/test_ciresan2012.py ciresan2012_bs5000_nw16_d1_4Layers_cc0.pkl ciresan2012_bs5000_nw18_d1_4Layers_cc0.pkl
-    assert len(sys.argv) > 1
-    models = sys.argv[1:]
-    test_columns(models)
+    # python code/test_ciresan2012.py 0 ciresan2012_bs5000_nw16_d1_4Layers_cc0.pkl ciresan2012_bs5000_nw18_d1_4Layers_cc0.pkl
+    assert len(sys.argv) > 2
+    models = sys.argv[2:]
+    test_columns(int(sys.argv[1]), models)
