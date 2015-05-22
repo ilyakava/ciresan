@@ -40,8 +40,41 @@ def save_model(name, theano_params, params):
     cPickle.dump(params, f, -1)
     f.close()
 
+def test_columns(models, dataset='mnist.pkl.gz'):
+    # create data hash that will be filled with data from different normalizations
+    all_datasets = {}
+    # instantiate multiple columns
+    columns = []
+    for model in models:
+        # load model params
+        f = open('./models/'+model)
+        params = cPickle.load(f)
+        nkerns, batch_size, normalized_width, distortion, cuda_convnet = cPickle.load(f)
+        if all_datasets.get(normalized_width):
+            datasets = all_datasets[normalized_width]
+        else:
+            datasets = load_data(dataset, normalized_width, 29)
+            all_datasets[normalized_width] = datasets
+        columns.append(Ciresan2012Column(datasets, nkerns, batch_size, normalized_width, distortion, cuda_convnet, params))
+    # call test on all of them recieving 10 outputs
+    model_outputs = [column.test_outputs() for column in columns]
+    # average 10 outputs
+    avg_output = numpy.mean(model_outputs, axis=0)
+    # argmax over them
+    predictions = numpy.argmax(avg_output, axis=1)
+    # output labels and acc
+    pred = T.ivector('pred')
+    true_labels = all_datasets.values()[0][2][1][:]
+
+    error = theano.function([pred], T.mean(T.neq(pred, true_labels)))
+    acc = error(predictions.astype(dtype=numpy.int32))
+    print 'Error across %i columns: %f %%' % (len(models), 100*acc)
+    return [predictions, acc]
+
 class Ciresan2012Column(object):
-    def __init__(self, datasets, nkerns=[32, 48], batch_size=1000, normalized_width=20, distortion=0, cuda_convnet=1):
+    def __init__(self, datasets,
+                 nkerns=[32, 48], batch_size=1000, normalized_width=20, distortion=0, cuda_convnet=1,
+                 params=[None, None, None, None, None, None, None, None]):
         """ Demonstrates Ciresan 2012 on MNIST dataset
 
         :type learning_rate: float
@@ -56,8 +89,12 @@ class Ciresan2012Column(object):
 
         :type nkerns: list of ints
         :param nkerns: number of kernels on each layer
+
+        :type params: list of None or Numpy matricies/arrays
+        :param params: W/b weights in the order: layer3W, layer3b, layer2W, layer2b, layer1W, layer1b, layer0W, layer0b
         """
 
+        layer3W, layer3b, layer2W, layer2b, layer1W, layer1b, layer0W, layer0b = params
         rng = numpy.random.RandomState(23455)
 
         # TODO: could make this a theano sym variable to abstract
@@ -163,6 +200,15 @@ class Ciresan2012Column(object):
             }
         )
 
+        # create a function to compute probabilities of all output classes
+        self.test_output_batch = theano.function(
+            [index],
+            layer3.p_y_given_x,
+            givens={
+                x: test_set_x[index * batch_size: (index + 1) * batch_size]
+            }
+        )
+
         self.validate_model = theano.function(
             [index],
             layer3.errors(y),
@@ -198,6 +244,13 @@ class Ciresan2012Column(object):
                 y: train_set_y[index * batch_size: (index + 1) * batch_size]
             }
         )
+
+    def test_outputs(self):
+        test_losses = [
+            self.test_output_batch(i)
+            for i in xrange(self.n_test_batches)
+        ]
+        return numpy.concatenate(test_losses)
 
     def train_column(self, init_learning_rate, n_epochs):
         print '... training'
@@ -307,6 +360,8 @@ def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
 
 
 if __name__ == '__main__':
+    # models = ['ciresan2012_bs5000_nw16_d1_4Layers_cc0.pkl', 'ciresan2012_bs5000_nw18_d1_4Layers_cc0.pkl']
+    # test_columns(models)
     # Should be trained 5 times per digit width normalization (10, 12, 14, 16, 18, 20)
     arg_names = ['command', 'batch_size', 'normalized_width', 'distortion', 'cuda_convnet', 'n_epochs']
     arg = dict(zip(arg_names, sys.argv))
