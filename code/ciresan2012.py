@@ -76,10 +76,9 @@ class Ciresan2012Column(object):
         # compute number of minibatches for training, validation and testing
         self.n_train_batches = train_set_x.get_value(borrow=True).shape[0]
         self.n_valid_batches = valid_set_x.get_value(borrow=True).shape[0]
-        self.n_test_batches = test_set_x.get_value(borrow=True).shape[0]
+        self.n_test_batches, self.test_remainder = divmod(test_set_x.get_value(borrow=True).shape[0], batch_size)
         self.n_train_batches /= batch_size
         self.n_valid_batches /= batch_size
-        self.n_test_batches /= batch_size
 
         # allocate symbolic variables for the data
         index = T.lscalar()  # index to a [mini]batch
@@ -227,9 +226,14 @@ class Ciresan2012Column(object):
         )
 
     def test_outputs(self):
+        """
+        ``self.n_test_batches + 1`` to ensure that all samples
+        in test set have predictions made for
+        """
+        lim = self.n_test_batches + 1 if self.test_remainder else self.n_test_batches
         test_losses = [
             self.test_output_batch(i)
-            for i in xrange(self.n_test_batches)
+            for i in xrange(lim)
         ]
         return numpy.concatenate(test_losses)
 
