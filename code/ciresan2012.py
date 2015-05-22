@@ -40,37 +40,6 @@ def save_model(name, theano_params, params):
     cPickle.dump(params, f, -1)
     f.close()
 
-def test_columns(models, dataset='mnist.pkl.gz'):
-    # create data hash that will be filled with data from different normalizations
-    all_datasets = {}
-    # instantiate multiple columns
-    columns = []
-    for model in models:
-        # load model params
-        f = open('./models/'+model)
-        params = cPickle.load(f)
-        nkerns, batch_size, normalized_width, distortion, cuda_convnet = cPickle.load(f)
-        if all_datasets.get(normalized_width):
-            datasets = all_datasets[normalized_width]
-        else:
-            datasets = load_data(dataset, normalized_width, 29)
-            all_datasets[normalized_width] = datasets
-        columns.append(Ciresan2012Column(datasets, nkerns, batch_size, normalized_width, distortion, cuda_convnet, params))
-    # call test on all of them recieving 10 outputs
-    model_outputs = [column.test_outputs() for column in columns]
-    # average 10 outputs
-    avg_output = numpy.mean(model_outputs, axis=0)
-    # argmax over them
-    predictions = numpy.argmax(avg_output, axis=1)
-    # output labels and acc
-    pred = T.ivector('pred')
-    true_labels = all_datasets.values()[0][2][1][:]
-
-    error = theano.function([pred], T.mean(T.neq(pred, true_labels)))
-    acc = error(predictions.astype(dtype=numpy.int32))
-    print 'Error across %i columns: %f %%' % (len(models), 100*acc)
-    return [predictions, acc]
-
 class Ciresan2012Column(object):
     def __init__(self, datasets,
                  nkerns=[32, 48], batch_size=1000, normalized_width=20, distortion=0, cuda_convnet=1,
@@ -152,7 +121,9 @@ class Ciresan2012Column(object):
             image_shape=layer0_imageshape,
             filter_shape=layer0_filtershape,
             poolsize=(2, 2),
-            cuda_convnet=cuda_convnet
+            cuda_convnet=cuda_convnet,
+            W=layer0W,
+            b=layer0b
         )
 
         layer1_imageshape = (nkerns[0], 13, 13, batch_size) if cuda_convnet else (batch_size, nkerns[0], 13, 13)
@@ -164,7 +135,9 @@ class Ciresan2012Column(object):
             image_shape=layer1_imageshape,
             filter_shape=layer1_filtershape,
             poolsize=(3, 3),
-            cuda_convnet=cuda_convnet
+            cuda_convnet=cuda_convnet,
+            W=layer1W,
+            b=layer1b
         )
 
         # the HiddenLayer being fully-connected, it operates on 2D matrices of
@@ -181,11 +154,19 @@ class Ciresan2012Column(object):
             input=layer2_input,
             n_in=nkerns[1] * 3 * 3,
             n_out=150,
+            W=layer2W,
+            b=layer2b,
             activation=T.tanh
         )
 
         # classify the values of the fully-connected sigmoidal layer
-        layer3 = LogisticRegression(input=layer2.output, n_in=150, n_out=10)
+        layer3 = LogisticRegression(
+            input=layer2.output,
+            n_in=150,
+            n_out=10,
+            W=layer3W,
+            b=layer3b
+        )
 
         # the cost we minimize during training is the NLL of the model
         cost = layer3.negative_log_likelihood(y)
@@ -336,7 +317,7 @@ class Ciresan2012Column(object):
                               os.path.split(__file__)[1] +
                               ' ran for %.2fm' % ((end_time - start_time) / 60.))
 
-def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
+def train_ciresan2012(init_learning_rate=0.001, n_epochs=800,
                          dataset='mnist.pkl.gz',
                          nkerns=[32, 48], batch_size=1000, normalized_width=20, distortion=0, cuda_convnet=1):
     """ Demonstrates Ciresan 2012 on MNIST dataset
@@ -360,8 +341,6 @@ def evaluate_ciresan2012(init_learning_rate=0.001, n_epochs=800,
 
 
 if __name__ == '__main__':
-    # models = ['ciresan2012_bs5000_nw16_d1_4Layers_cc0.pkl', 'ciresan2012_bs5000_nw18_d1_4Layers_cc0.pkl']
-    # test_columns(models)
     # Should be trained 5 times per digit width normalization (10, 12, 14, 16, 18, 20)
     arg_names = ['command', 'batch_size', 'normalized_width', 'distortion', 'cuda_convnet', 'n_epochs']
     arg = dict(zip(arg_names, sys.argv))
@@ -372,5 +351,5 @@ if __name__ == '__main__':
     cuda_convnet = int(arg.get('cuda_convnet') or 0)
     n_epochs = int(arg.get('n_epochs') or 800) # useful to change to 1 for a quick test run
 
-    evaluate_ciresan2012(batch_size=batch_size, normalized_width=normalized_width,
+    train_ciresan2012(batch_size=batch_size, normalized_width=normalized_width,
                          distortion=distortion, n_epochs=n_epochs, cuda_convnet=cuda_convnet)
