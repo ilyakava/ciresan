@@ -87,17 +87,19 @@ class HiddenLayer(object):
                 ),
                 dtype=theano.config.floatX
             )
-            if activation == theano.tensor.nnet.sigmoid:
-                W_values *= 4
+        else:
+            W_values = numpy.asarray(W, dtype=theano.config.floatX)
 
-            W = theano.shared(value=W_values, name='W', borrow=True)
+        if activation == theano.tensor.nnet.sigmoid:
+            W_values *= 4
 
         if b is None:
             b_values = numpy.zeros((n_out,), dtype=theano.config.floatX)
-            b = theano.shared(value=b_values, name='b', borrow=True)
+        else:
+            b_values = numpy.asarray(b, dtype=theano.config.floatX)
 
-        self.W = W
-        self.b = b
+        self.W = theano.shared(value=W_values, name='W', borrow=True)
+        self.b = theano.shared(value=b_values, name='b', borrow=True)
 
         lin_output = T.dot(input, self.W) + self.b
         self.output = (
