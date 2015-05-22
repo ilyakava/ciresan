@@ -44,7 +44,7 @@ from mlp import HiddenLayer
 class LeNetConvPoolLayer(object):
     """Pool Layer of a convolutional network """
 
-    def __init__(self, rng, input, filter_shape, image_shape, poolsize=(2, 2), cuda_convnet=0):
+    def __init__(self, rng, input, filter_shape, image_shape, poolsize=(2, 2), cuda_convnet=0, W=None, b=None):
         """
         Allocate a LeNetConvPoolLayer with shared variable internal parameters.
 
@@ -69,29 +69,37 @@ class LeNetConvPoolLayer(object):
         assert image_shape[channels_idx] == filter_shape[channels_idx]
         self.input = input
 
-        # there are "num input feature maps * filter height * filter width"
-        # inputs to __each__ hidden unit
-        fan_in = numpy.prod(filter_shape[1:])
-        # __each__ unit in the lower layer receives a gradient from:
-        # "num output feature maps * filter height * filter width" /
-        #   pooling size
-        fan_out = (filter_shape[0] * numpy.prod(filter_shape[2:]) /
-                   numpy.prod(poolsize))
-        # initialize weights with random weights
-        W_bound = numpy.sqrt(6. / (fan_in + fan_out))
-        self.W = theano.shared(
-            numpy.asarray(
+        if W is None:
+            if cuda_convnet:
+                fan_in = numpy.prod(filter_shape[0:3])
+                fan_out = (filter_shape[3] * numpy.prod(filter_shape[1:3]) /
+                       numpy.prod(poolsize))
+            else:
+                # there are "num input feature maps * filter height * filter width"
+                # inputs to __each__ hidden unit
+                fan_in = numpy.prod(filter_shape[1:])
+                # __each__ unit in the lower layer receives a gradient from:
+                # "num output feature maps * filter height * filter width" /
+                #   pooling size
+                fan_out = (filter_shape[0] * numpy.prod(filter_shape[2:]) /
+                           numpy.prod(poolsize))
+            # initialize weights with random weights
+            W_bound = numpy.sqrt(6. / (fan_in + fan_out))
+            W_values = numpy.asarray(
                 rng.uniform(low=-W_bound, high=W_bound, size=filter_shape),
                 dtype=theano.config.floatX
-            ),
-            borrow=True
-        )
+            )
+        else:
+            W_values = numpy.asarray(W, dtype=theano.config.floatX)
 
         # the bias is a 1D tensor -- one bias per output feature map
-        if cuda_convnet:
-            b_values = numpy.zeros((filter_shape[3],), dtype=theano.config.floatX)
+        if b is None:
+            numchan = filter_shape[3] if cuda_convnet else filter_shape[0]
+            b_values = numpy.zeros((numchan,), dtype=theano.config.floatX)
         else:
-            b_values = numpy.zeros((filter_shape[0],), dtype=theano.config.floatX)
+            b_values = numpy.asarray(b, dtype=theano.config.floatX)
+
+        self.W = theano.shared(value=W_values, borrow=True)
         self.b = theano.shared(value=b_values, borrow=True)
 
         # convolve input feature maps with filters
