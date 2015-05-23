@@ -46,6 +46,12 @@ class Ciresan2012Column(object):
                  params=[None, None, None, None, None, None, None, None]):
         """ Demonstrates Ciresan 2012 on MNIST dataset
 
+        Some minor differences here:
+        ---
+        - Ciresan initializes Conv layers with: "uniform random distribution
+            in the range [−0.05, 0.05]." (Ciresan IJCAI 2011)
+        - Ciresan uses a sigma of 6
+
         :type learning_rate: float
         :param learning_rate: learning rate used (factor for the stochastic
                               gradient)
