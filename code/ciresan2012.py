@@ -27,7 +27,7 @@ import collections
 
 import pdb
 
-SIGMA = 8
+SIGMA = 8 # increased from too-extreme seeming 6 in ICDAR 2011
 ALPHA = 36
 
 def save_model(name, theano_params, params):
