@@ -25,7 +25,8 @@ def test_columns(exclude_mode, models, dataset='mnist.pkl.gz'):
         else:
             datasets = load_data(dataset, normalized_width, 29)
             all_datasets[normalized_width] = datasets
-        columns.append(Ciresan2012Column(datasets, nkerns, batch_size, normalized_width, distortion, cuda_convnet, params))
+        # no distortion during testing
+        columns.append(Ciresan2012Column(datasets, nkerns, batch_size, normalized_width, 0, cuda_convnet, params))
     print '... Testing columns'
     # call test on all of them recieving 10 outputs
     model_outputs = [column.test_outputs() for column in columns]
