@@ -307,7 +307,7 @@ class Ciresan2012Column(object):
         end_time = time.clock()
         print('Optimization complete.')
         nkerns, batch_size, normalized_width, distortion, cuda_convnet = self.column_params
-        name = 'ciresan2012_bs%i_nw%i_d%i_%iLayers_cc%i' % (batch_size, normalized_width, distortion, len(self.params) / 2, cuda_convnet)
+        name = 'ciresan2012_bs%i_nw%i_d%i_%iLayers_cc%i_t%i' % (batch_size, normalized_width, distortion, len(self.params) / 2, cuda_convnet, int(time.time()))
         print('Saving Model as "%s"...' % name)
         save_model(name, self.params, self.column_params)
         print('Best validation score of %f %% obtained at iteration %i, '
