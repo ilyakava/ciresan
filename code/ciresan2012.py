@@ -51,6 +51,8 @@ class Ciresan2012Column(object):
         - Ciresan initializes Conv layers with: "uniform random distribution
             in the range [−0.05, 0.05]." (Ciresan IJCAI 2011)
         - Ciresan uses a sigma of 6
+        - Ciresan uses nkerns=[20, 40] which were increased here to be nkerns=[32, 48]
+            in order to be compatible with cuda_convnet
 
         :type learning_rate: float
         :param learning_rate: learning rate used (factor for the stochastic
