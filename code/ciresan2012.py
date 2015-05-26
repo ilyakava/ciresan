@@ -263,9 +263,10 @@ class Ciresan2012Column(object):
 
         epoch = 0
         done_looping = False
+        final_learning_rate = init_learning_rate * 0.993**500
 
         while (epoch < n_epochs) and (not done_looping):
-            cur_learning_rate = numpy.array(init_learning_rate * 0.993**epoch, dtype=numpy.float32)
+            cur_learning_rate = max(numpy.array([init_learning_rate * 0.993**epoch, final_learning_rate], dtype=numpy.float32))
             epoch = epoch + 1
             for minibatch_index in xrange(self.n_train_batches):
 
