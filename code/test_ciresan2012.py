@@ -12,6 +12,7 @@ from ciresan2012 import Ciresan2012Column
 import pdb
 
 def test_columns(exclude_mode, models, dataset='mnist.pkl.gz'):
+    print '... Starting to test %i columns' % len(models)
     # create data hash that will be filled with data from different normalizations
     all_datasets = {}
     # instantiate multiple columns
@@ -28,16 +29,15 @@ def test_columns(exclude_mode, models, dataset='mnist.pkl.gz'):
             all_datasets[normalized_width] = datasets
         # no distortion during testing
         columns.append(Ciresan2012Column(datasets, nkerns, batch_size, normalized_width, 0, cuda_convnet, params))
-    print '... Testing columns'
+    print '... Forward propagating %i columns' % len(models)
     # call test on all of them recieving 10 outputs
     model_outputs = [column.test_outputs() for column in columns]
     # average 10 outputs
     avg_output = numpy.mean(model_outputs, axis=0)
     # argmax over them
     predictions = numpy.argmax(avg_output, axis=1)
-    # output labels and acc
+    # compare predictions with true labels
     pred = T.ivector('pred')
-
     all_true_labels_length = theano.function([], all_datasets.values()[0][2][1].shape)
     remainder = all_true_labels_length() - len(predictions)
     if exclude_mode and remainder:

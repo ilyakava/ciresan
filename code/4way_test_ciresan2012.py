@@ -31,7 +31,7 @@ if __name__ == '__main__':
     assert len(sys.argv) == 6
     all_models = numpy.array(sys.argv[2:])
     for combo in combos:
-        models = all_models[numpy.array(combo)]
+        models = all_models[numpy.array(combo) == 1]
         predictions, acc = test_columns(int(sys.argv[1]), models)
         results.append(acc)
     print results
