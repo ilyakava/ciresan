@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This tutorial introduces logistic regression using Theano and stochastic
 gradient descent.

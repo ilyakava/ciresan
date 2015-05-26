@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This tutorial introduces the multilayer perceptron using Theano.
 
