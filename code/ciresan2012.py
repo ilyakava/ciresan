@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Architecture, Hyper-params: http://arxiv.org/abs/1202.2745
 Width Normalization, Elastic distortion Hyper-params: http://arxiv.org/abs/1103.4487

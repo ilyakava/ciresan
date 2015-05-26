@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import theano
 import theano.tensor as T
 from logistic_sgd import load_data

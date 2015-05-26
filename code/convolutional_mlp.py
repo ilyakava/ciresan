@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """This tutorial introduces the LeNet5 neural network architecture
 using Theano.  LeNet5 is a convolutional neural network, good for
 classifying images. This tutorial shows how to build the architecture,
