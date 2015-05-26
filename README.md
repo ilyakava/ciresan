@@ -38,7 +38,7 @@ Counter-intuitively, a smaller normalized width improved results. Most likely, t
 | 12         | 16          | 8                | 36               | 3,500,000 | 1.38      | 1.79       | 553 | 800    |
 | 12         | 14          | 8                | 36               | 3,500,000 | 1.47      | 1.93       | 553 | 800    |
 
-*Note: 1) the decrease in train time between data rows 4 and 5 although the batch size increased. This is due to switching to a faster convolutional implementation from [cuda-convnet](https://code.google.com/p/cuda-convnet/). 2) the high validation error with comparison to the test error, this is due to distortion being applied to the input data for validation but not test. 3) Error on smaller normalized width increases, since the fixed distortion params are more effective on the smaller images.*
+*Note: 1) the decrease in train time between data rows 4 and 5 although the batch size decreased from 100 to 50. This is due to switching to a faster convolution implementation from [cuda-convnet](https://code.google.com/p/cuda-convnet/) via [py2learn](http://benanne.github.io/2014/04/03/faster-convolutions-in-theano.html). 2) the high validation error with comparison to the test error, this is due to distortion being applied to the input data for validation but not test. 3) Error on smaller normalized width increases, since the fixed distortion params are more effective on the smaller images.*
 
 ## Hyper-parameters
 
