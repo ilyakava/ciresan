@@ -28,7 +28,7 @@ if __name__ == '__main__':
         [1,1,1,1]
     ]
     results = []
-    assert len(sys.argv) == 7
+    assert len(sys.argv) == 6
     all_models = numpy.array(sys.argv[2:])
     for combo in combos:
         models = all_models[numpy.array(combo)]
