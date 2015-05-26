@@ -18,8 +18,10 @@ The prediction process consists of:
 
 ## Results:
 
+Our best result is 0.57% error with 5 columns, trained at normalized widths 12, 14, 16, 18, and 20.
+
 ![4 model committees](./plots/4Model_committees.png)
-*This figure shows the error in basis points on 10,000 test points from various combinations of trained network columns. The only difference between the 4 individual pictured columns is the normalized width of the training set, which progresses from 14 to 20, left to right, by 2. The best result pictured is an error of 59 basis points, i.e. an **error of 0.59%**. This figure was made by `venn_diagram.r`*
+*This figure shows the error in basis points on 10,000 test points from various combinations of trained network columns. The only difference between the 4 individual pictured columns is the normalized width of the training set, which progresses from 14 to 20, left to right, by 2. The best result pictured is an error of 59 basis points, i.e. an **error of 0.59%**, from both a 3 column network (normalized widths 14,16,18) and 4 column network (all 4 normalized widths here). This figure was made by `venn_diagram.r`*
 
 Counter-intuitively, a smaller normalized width improved results. Most likely, this is due to the increased effect of distortion on smaller digit sizes improving the quality of the trained net. We can investigate this effect further by raising alpha, or sigma for our training sets (especially the larger digit normalizations).
 
