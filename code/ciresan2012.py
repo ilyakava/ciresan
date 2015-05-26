@@ -351,14 +351,15 @@ def train_ciresan2012(init_learning_rate=0.001, n_epochs=800,
 
 if __name__ == '__main__':
     # Should be trained 5 times per digit width normalization (10, 12, 14, 16, 18, 20)
-    arg_names = ['command', 'batch_size', 'normalized_width', 'distortion', 'cuda_convnet', 'n_epochs']
+    arg_names = ['command', 'batch_size', 'normalized_width', 'distortion', 'cuda_convnet', 'init_learning_rate' 'n_epochs']
     arg = dict(zip(arg_names, sys.argv))
 
     batch_size = int(arg.get('batch_size') or 100)
     normalized_width = int(arg.get('normalized_width') or 0)
     distortion = int(arg.get('distortion') or 0)
     cuda_convnet = int(arg.get('cuda_convnet') or 0)
+    init_learning_rate = float(arg.get('init_learning_rate') or 0.001)
     n_epochs = int(arg.get('n_epochs') or 800) # useful to change to 1 for a quick test run
 
-    train_ciresan2012(batch_size=batch_size, normalized_width=normalized_width,
+    train_ciresan2012(init_learning_rate=init_learning_rate, batch_size=batch_size, normalized_width=normalized_width,
                          distortion=distortion, n_epochs=n_epochs, cuda_convnet=cuda_convnet)
