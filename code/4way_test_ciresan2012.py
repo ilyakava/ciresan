@@ -33,5 +33,5 @@ if __name__ == '__main__':
     for combo in combos:
         models = all_models[numpy.array(combo)]
         predictions, acc = test_columns(int(sys.argv[1]), models)
-        results << acc
+        results.append(acc)
     print results
