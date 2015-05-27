@@ -221,7 +221,7 @@ class Ciresan2012Column(object):
         # create the updates list by automatically looping over all
         # (params[i], grads[i]) pairs.
         updates = [
-            (param_i, param_i - (learning_rate/batch_size) * grad_i)
+            (param_i, param_i - (learning_rate) * grad_i)
             for param_i, grad_i in zip(self.params, grads)
         ]
 
@@ -231,7 +231,7 @@ class Ciresan2012Column(object):
         # should show what multiple current learning rate is of optimal learning rate
         grads_L1 = sum([abs(grad).sum() for grad in grads])
         params_L1 = sum([abs(param).sum() for param in self.params])
-        update_ratio = (learning_rate/(optimal_ratio*batch_size)) * (grads_L1/params_L1)
+        update_ratio = (learning_rate/(optimal_ratio)) * (grads_L1/params_L1)
 
         self.train_model = theano.function(
             [index, learning_rate],
@@ -283,7 +283,7 @@ class Ciresan2012Column(object):
                 cost_ij, update_ratio = self.train_model(minibatch_index, cur_learning_rate)
 
                 if iter % 100 == 0:
-                    print 'training @ iter = %i. Cur learning rate is %f x optimal' % (iter, update_ratio)
+                    print 'training @ iter = %i. Cur learning rate (%f) is %f x optimal' % (iter, cur_learning_rate, update_ratio)
 
                 if (iter + 1) % validation_frequency == 0:
 
@@ -360,7 +360,7 @@ def train_ciresan2012(init_learning_rate=0.001, n_epochs=800,
 
 if __name__ == '__main__':
     # Should be trained 5 times per digit width normalization (10, 12, 14, 16, 18, 20)
-    arg_names = ['command', 'batch_size', 'normalized_width', 'distortion', 'cuda_convnet', 'init_learning_rate' 'n_epochs']
+    arg_names = ['command', 'batch_size', 'normalized_width', 'distortion', 'cuda_convnet', 'init_learning_rate', 'n_epochs']
     arg = dict(zip(arg_names, sys.argv))
 
     batch_size = int(arg.get('batch_size') or 100)
