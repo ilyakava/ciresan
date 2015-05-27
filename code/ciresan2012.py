@@ -221,13 +221,21 @@ class Ciresan2012Column(object):
         # create the updates list by automatically looping over all
         # (params[i], grads[i]) pairs.
         updates = [
-            (param_i, param_i - learning_rate * grad_i)
+            (param_i, param_i - (learning_rate/batch_size) * grad_i)
             for param_i, grad_i in zip(self.params, grads)
         ]
 
+        # Suggested by Alex Krizhevsky, found on:
+        # http://yyue.blogspot.com/2015/01/a-brief-overview-of-deep-learning.html
+        optimal_ratio = 0.001
+        # should show what multiple current learning rate is of optimal learning rate
+        grads_L1 = sum([abs(grad).sum() for grad in grads])
+        params_L1 = sum([abs(param).sum() for param in self.params])
+        update_ratio = ((learning_rate/batch_size)*grads_L1) / (optimal_ratio * params_L1)
+
         self.train_model = theano.function(
             [index, learning_rate],
-            cost,
+            [cost, update_ratio],
             updates=updates,
             givens={
                 x: train_set_x[index * batch_size: (index + 1) * batch_size],
@@ -272,10 +280,10 @@ class Ciresan2012Column(object):
 
                 iter = (epoch - 1) * self.n_train_batches + minibatch_index
 
-                if iter % 100 == 0:
-                    print 'training @ iter = ', iter
+                cost_ij, update_ratio = self.train_model(minibatch_index, cur_learning_rate)
 
-                cost_ij = self.train_model(minibatch_index, cur_learning_rate)
+                if iter % 100 == 0:
+                    print 'training @ iter = %i. Cur learning rate is %f x optimal' % (iter, round(update_ratio, 2))
 
                 if (iter + 1) % validation_frequency == 0:
 
