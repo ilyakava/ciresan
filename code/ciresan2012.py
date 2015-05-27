@@ -221,7 +221,7 @@ class Ciresan2012Column(object):
         # create the updates list by automatically looping over all
         # (params[i], grads[i]) pairs.
         updates = [
-            (param_i, param_i - (learning_rate/batch_size) * grad_i)
+            (param_i, param_i - (learning_rate) * grad_i)
             for param_i, grad_i in zip(self.params, grads)
         ]
 
@@ -231,7 +231,7 @@ class Ciresan2012Column(object):
         # should show what multiple current learning rate is of optimal learning rate
         grads_L1 = sum([abs(grad).sum() for grad in grads])
         params_L1 = sum([abs(param).sum() for param in self.params])
-        update_ratio = (learning_rate/(optimal_ratio*batch_size)) * (grads_L1/params_L1)
+        update_ratio = (learning_rate/(optimal_ratio)) * (grads_L1/params_L1)
 
         self.train_model = theano.function(
             [index, learning_rate],
