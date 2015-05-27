@@ -253,11 +253,8 @@ class Ciresan2012Column(object):
     def train_column(self, init_learning_rate, n_epochs):
         print '... training'
         # early-stopping parameters
-        patience = 10000  # look as this many examples regardless
-        patience_increase = 2  # wait this much longer when a new best is
-                               # found
-        improvement_threshold = 0.995  # a relative improvement of this much is
-                                       # considered significant
+        patience = 10000  # look as this many batches regardless
+        wait_until = patience
         validation_frequency = min(self.n_train_batches, patience / 2)
                                       # go through this many
                                       # minibatche before checking the network
@@ -295,13 +292,8 @@ class Ciresan2012Column(object):
                           (epoch, minibatch_index + 1, self.n_train_batches,
                            this_validation_loss * 100.))
 
-                    # if we got the best validation score until now
                     if this_validation_loss < best_validation_loss:
-
-                        #improve patience if loss improvement is good enough
-                        if this_validation_loss < best_validation_loss *  \
-                           improvement_threshold:
-                            patience = max(patience, iter * patience_increase)
+                        wait_until = iter + patience
 
                         # save best validation score and iteration number
                         best_validation_loss = this_validation_loss
@@ -318,7 +310,7 @@ class Ciresan2012Column(object):
                               (epoch, minibatch_index + 1, self.n_train_batches,
                                test_score * 100.))
 
-                if patience <= iter:
+                if wait_until <= iter:
                     done_looping = True
                     break
 
