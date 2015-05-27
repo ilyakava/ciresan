@@ -283,7 +283,7 @@ class Ciresan2012Column(object):
                 cost_ij, update_ratio = self.train_model(minibatch_index, cur_learning_rate)
 
                 if iter % 100 == 0:
-                    print 'training @ iter = %i. Cur learning rate is %f x optimal' % (iter, update_ratio)
+                    print 'training @ iter = %i. Cur learning rate (%f) is %f x optimal' % (iter, cur_learning_rate, update_ratio)
 
                 if (iter + 1) % validation_frequency == 0:
 
