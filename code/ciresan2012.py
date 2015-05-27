@@ -294,8 +294,7 @@ class Ciresan2012Column(object):
                            this_validation_loss * 100.))
 
                     if this_validation_loss < best_validation_loss:
-                        # in beginning will use first, later will use second
-                        wait_until = min([iter * wait_until_iter_increase, iter + patience])
+                        wait_until = iter + patience
 
                         # save best validation score and iteration number
                         best_validation_loss = this_validation_loss
