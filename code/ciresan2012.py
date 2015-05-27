@@ -231,7 +231,7 @@ class Ciresan2012Column(object):
         # should show what multiple current learning rate is of optimal learning rate
         grads_L1 = sum([abs(grad).sum() for grad in grads])
         params_L1 = sum([abs(param).sum() for param in self.params])
-        update_ratio = ((learning_rate/batch_size)*grads_L1) / (optimal_ratio * params_L1)
+        update_ratio = (learning_rate/(optimal_ratio*batch_size)) * (grads_L1/params_L1)
 
         self.train_model = theano.function(
             [index, learning_rate],
@@ -283,7 +283,7 @@ class Ciresan2012Column(object):
                 cost_ij, update_ratio = self.train_model(minibatch_index, cur_learning_rate)
 
                 if iter % 100 == 0:
-                    print 'training @ iter = %i. Cur learning rate is %f x optimal' % (iter, round(update_ratio, 2))
+                    print 'training @ iter = %i. Cur learning rate is %f x optimal' % (iter, update_ratio)
 
                 if (iter + 1) % validation_frequency == 0:
 
