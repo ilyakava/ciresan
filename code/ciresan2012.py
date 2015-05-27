@@ -360,7 +360,7 @@ def train_ciresan2012(init_learning_rate=0.001, n_epochs=800,
 
 if __name__ == '__main__':
     # Should be trained 5 times per digit width normalization (10, 12, 14, 16, 18, 20)
-    arg_names = ['command', 'batch_size', 'normalized_width', 'distortion', 'cuda_convnet', 'init_learning_rate' 'n_epochs']
+    arg_names = ['command', 'batch_size', 'normalized_width', 'distortion', 'cuda_convnet', 'init_learning_rate', 'n_epochs']
     arg = dict(zip(arg_names, sys.argv))
 
     batch_size = int(arg.get('batch_size') or 100)
