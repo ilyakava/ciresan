@@ -75,6 +75,10 @@ class LeNetConvPoolLayer(object):
                 fan_in = numpy.prod(filter_shape[0:3])
                 fan_out = (filter_shape[3] * numpy.prod(filter_shape[1:3]) /
                        numpy.prod(poolsize))
+                # TODO: correct numpy.prod(poolsize). Theano's max_pool_2d uses a tuple
+                # to signify (x,y) poolsize and doesn't overlap these. cuda-convnet uses
+                # the tuple to signify a square pool of size x^2, with a stride y. So only
+                # if x == y in this case does numpy.prod(poolsize) work.
             else:
                 # there are "num input feature maps * filter height * filter width"
                 # inputs to __each__ hidden unit
