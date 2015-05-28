@@ -45,7 +45,7 @@ from mlp import HiddenLayer
 class LeNetConvPoolLayer(object):
     """Pool Layer of a convolutional network """
 
-    def __init__(self, rng, input, filter_shape, image_shape, poolsize=(2, 2), cuda_convnet=0, W=None, b=None):
+    def __init__(self, rng, input, filter_shape, image_shape, poolsize=(2, 2), cuda_convnet=0, W=None, b=None, activation=T.tanh):
         """
         Allocate a LeNetConvPoolLayer with shared variable internal parameters.
 
@@ -136,9 +136,9 @@ class LeNetConvPoolLayer(object):
         # thus be broadcasted across mini-batches and feature map
         # width & height
         if cuda_convnet:
-            self.output = T.tanh(pooled_out + self.b.dimshuffle(0, 'x', 'x', 'x'))
+            self.output = activation(pooled_out + self.b.dimshuffle(0, 'x', 'x', 'x'))
         else:
-            self.output = T.tanh(pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
+            self.output = activation(pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
 
         # store parameters of this layer
         self.params = [self.W, self.b]
