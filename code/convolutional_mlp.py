@@ -118,7 +118,9 @@ class LeNetConvPoolLayer(object):
             )
 
         # downsample each feature map individually, using maxpooling
-        if cuda_convnet:
+        if (poolsize[0] == 1 and cuda_convnet) or (poolsize[0] == 1 and poolsize[1] == 1 and not cuda_convnet):
+            pooled_out = conv_out
+        elif cuda_convnet:
             pool_op = MaxPool(ds=poolsize[0], stride=poolsize[1])
             contiguous_input = gpu_contiguous(conv_out)
             pooled_out = pool_op(contiguous_input)
