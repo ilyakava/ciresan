@@ -26,6 +26,8 @@ from theanet.theanet.layer.inlayers import ElasticLayer
 import cPickle
 import collections
 
+from lasagne.nonlinearities import LeakyRectify
+
 import pdb
 
 SIGMA = 8 # increased from too-extreme seeming 6 in ICDAR 2011
@@ -103,6 +105,7 @@ class Ciresan2012Column(object):
         # BUILD ACTUAL MODEL #
         ######################
         print '... building the column'
+        activation = LeakyRectify(0.01)
 
         if distortion:
             distortion_layer = ElasticLayer(
@@ -132,7 +135,8 @@ class Ciresan2012Column(object):
             poolsize=(2, 2),
             cuda_convnet=cuda_convnet,
             W=layer0W,
-            b=layer0b
+            b=layer0b,
+            activation=activation
         )
 
         layer1_imageshape = (nkerns[0], 13, 13, batch_size) if cuda_convnet else (batch_size, nkerns[0], 13, 13)
@@ -146,7 +150,8 @@ class Ciresan2012Column(object):
             poolsize=(3, 3),
             cuda_convnet=cuda_convnet,
             W=layer1W,
-            b=layer1b
+            b=layer1b,
+            activation=activation
         )
 
         # the HiddenLayer being fully-connected, it operates on 2D matrices of
