@@ -16,6 +16,23 @@ The prediction process consists of:
 
 ---
 
+## Usage:
+
+Params order: 'batch_size', 'normalized_width', 'distortion', 'cuda_convnet', 'init_learning_rate', 'n_epochs'
+
+Train: `python code/ciresan2012.py 128 20 1 1 0.2`
+Test: `python code/test_ciresan2012.py 0 ciresan2012_bs128_nw20_d1_4Layers_cc1_t1432834900.pkl`
+
+### Dependencies:
+
+#### theanet for distortion=1
+
+`git submodule update --init`
+
+#### pylearn2 for cuda_convnet=1 option
+
+`sudo apt-get install -y python-yaml && git clone git://github.com/lisa-lab/pylearn2.git && cd pylearn2/ && sudo python setup.py develop`
+
 ## Results:
 
 Our best result is an error of 0.29%.
