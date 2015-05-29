@@ -259,10 +259,11 @@ def load_data(dataset, normalized_width=0, out_image_size=SS):
     f = gzip.open(dataset, 'rb')
     train_set, valid_set, test_set = cPickle.load(f)
 
-    print '... preparing data'
-
     if normalized_width or (out_image_size != SS):
-        print '... normalizing digits to width %i' % normalized_width
+        if normalized_width:
+            print '... normalizing digits to width %i' % normalized_width
+        else:
+            print '... (un)padding digits from %i -> %i' % (SS, out_image_size)
         train_set = (prepare_images(train_set, out_image_size, normalized_width), train_set[1])
         valid_set = (prepare_images(valid_set, out_image_size, normalized_width), valid_set[1])
         test_set =  (prepare_images(test_set, out_image_size, normalized_width),  test_set[1])
