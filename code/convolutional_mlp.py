@@ -45,7 +45,7 @@ from mlp import HiddenLayer
 class LeNetConvPoolLayer(object):
     """Pool Layer of a convolutional network """
 
-    def __init__(self, rng, input, filter_shape, image_shape, poolsize=(2, 2), cuda_convnet=0, W=None, b=None, activation=T.tanh):
+    def __init__(self, rng, input, filter_shape, image_shape, poolsize=(2, 2), cuda_convnet=0, W=None, b=None, activation=T.tanh, border_mode='valid'):
         """
         Allocate a LeNetConvPoolLayer with shared variable internal parameters.
 
@@ -117,8 +117,9 @@ class LeNetConvPoolLayer(object):
             conv_out = conv.conv2d(
                 input=input,
                 filters=self.W,
+                image_shape=image_shape,
                 filter_shape=filter_shape,
-                image_shape=image_shape
+                border_mode=border_mode
             )
 
         # downsample each feature map individually, using maxpooling
