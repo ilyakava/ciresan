@@ -261,7 +261,7 @@ def load_data(dataset, normalized_width=0, out_image_size=SS):
 
     if normalized_width or (out_image_size != SS):
         if normalized_width:
-            print '... normalizing digits to width %i' % normalized_width
+            print '... normalizing digits to width %i with extra padding %i' % (normalized_width, out_image_size - SS)
         else:
             print '... (un)padding digits from %i -> %i' % (SS, out_image_size)
         train_set = (prepare_images(train_set, out_image_size, normalized_width), train_set[1])
