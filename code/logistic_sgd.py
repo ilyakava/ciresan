@@ -221,7 +221,7 @@ def normalized_image(x, normalized_width, end_size):
     # assert sum(sum(x) != 0) == normalized_width
     return pad_image(x, end_size)
 
-def load_data(dataset, normalized_width=0, out_image_size=SS):
+def load_data(dataset, normalized_width=0, out_image_size=SS, conserve_gpu_memory=False):
     ''' Loads the dataset
 
     :type dataset: string
@@ -276,8 +276,9 @@ def load_data(dataset, normalized_width=0, out_image_size=SS):
     #the number of rows in the input. It should give the target
     #target to the example with the same index in the input.
 
-    def shared_dataset(data_xy, borrow=True):
-        """ Function that loads the dataset into shared variables
+    def format_dataset(data_xy, borrow=True, conserve_gpu_memory=False):
+        """ Function that casts the dataset into the right types, and
+        optionally loads the entire dataset into GPU memory (shared variables)
 
         The reason we store our dataset in shared variables is to allow
         Theano to copy it into the GPU memory (when code is run on GPU).
@@ -286,10 +287,11 @@ def load_data(dataset, normalized_width=0, out_image_size=SS):
         variable) would lead to a large decrease in performance.
         """
         data_x, data_y = data_xy
-        shared_x = theano.shared(numpy.asarray(data_x,
+        if conserve_gpu_memory:
+            shared_x = theano.tensor._shared(numpy.asarray(data_x,
                                                dtype=theano.config.floatX),
                                  borrow=borrow)
-        shared_y = theano.shared(numpy.asarray(data_y,
+            shared_y = theano.tensor._shared(numpy.asarray(data_y,
                                                dtype=theano.config.floatX),
                                  borrow=borrow)
         # When storing data on the GPU it has to be stored as floats
@@ -299,11 +301,18 @@ def load_data(dataset, normalized_width=0, out_image_size=SS):
         # floats it doesn't make sense) therefore instead of returning
         # ``shared_y`` we will have to cast it to int. This little hack
         # lets ous get around this issue
+        else:
+            shared_x = theano.shared(numpy.asarray(data_x,
+                                                   dtype=theano.config.floatX),
+                                     borrow=borrow)
+            shared_y = theano.shared(numpy.asarray(data_y,
+                                                   dtype=theano.config.floatX),
+                                     borrow=borrow)
         return shared_x, T.cast(shared_y, 'int32')
 
-    test_set_x, test_set_y = shared_dataset(test_set)
-    valid_set_x, valid_set_y = shared_dataset(valid_set)
-    train_set_x, train_set_y = shared_dataset(train_set)
+    test_set_x, test_set_y = format_dataset(test_set, conserve_gpu_memory=conserve_gpu_memory)
+    valid_set_x, valid_set_y = format_dataset(valid_set, conserve_gpu_memory=conserve_gpu_memory)
+    train_set_x, train_set_y = format_dataset(train_set, conserve_gpu_memory=conserve_gpu_memory)
 
     rval = [(train_set_x, train_set_y), (valid_set_x, valid_set_y),
             (test_set_x, test_set_y)]
