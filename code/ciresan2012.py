@@ -337,7 +337,7 @@ class Ciresan2012Column(object):
 
 def train_ciresan2012(init_learning_rate=0.001, n_epochs=800,
                          dataset='mnist.pkl.gz',
-                         nkerns=[32, 48], batch_size=1000, normalized_width=20, distortion=0, cuda_convnet=1):
+                         nkerns=[32, 48], batch_size=1000, normalized_width=20, distortion=0, cuda_convnet=1, conserve_gpu_memory=False):
     """ Demonstrates Ciresan 2012 on MNIST dataset
 
     :type learning_rate: float
@@ -353,14 +353,14 @@ def train_ciresan2012(init_learning_rate=0.001, n_epochs=800,
     :type nkerns: list of ints
     :param nkerns: number of kernels on each layer
     """
-    datasets = load_data(dataset, normalized_width, 29)
+    datasets = load_data(dataset, normalized_width, out_image_size=29, conserve_gpu_memory=conserve_gpu_memory)
     column = Ciresan2012Column(datasets, nkerns, batch_size, normalized_width, distortion, cuda_convnet)
     column.train_column(init_learning_rate, n_epochs)
 
 
 if __name__ == '__main__':
     # Should be trained 5 times per digit width normalization (10, 12, 14, 16, 18, 20)
-    arg_names = ['command', 'batch_size', 'normalized_width', 'distortion', 'cuda_convnet', 'init_learning_rate', 'n_epochs']
+    arg_names = ['command', 'batch_size', 'normalized_width', 'distortion', 'cuda_convnet', 'init_learning_rate', 'n_epochs', 'conserve_gpu_memory']
     arg = dict(zip(arg_names, sys.argv))
 
     batch_size = int(arg.get('batch_size') or 100)
@@ -369,6 +369,7 @@ if __name__ == '__main__':
     cuda_convnet = int(arg.get('cuda_convnet') or 0)
     init_learning_rate = float(arg.get('init_learning_rate') or 0.001)
     n_epochs = int(arg.get('n_epochs') or 800) # useful to change to 1 for a quick test run
+    conserve_gpu_memory = int(arg.get('conserve_gpu_memory') or 0)
 
     train_ciresan2012(init_learning_rate=init_learning_rate, batch_size=batch_size, normalized_width=normalized_width,
-                         distortion=distortion, n_epochs=n_epochs, cuda_convnet=cuda_convnet)
+                         distortion=distortion, n_epochs=n_epochs, cuda_convnet=cuda_convnet, conserve_gpu_memory=conserve_gpu_memory)
