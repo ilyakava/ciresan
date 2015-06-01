@@ -51,7 +51,7 @@ As we would expect, a larger normalized width improved results.
 
 #### A table of various trials run:
 
-Trial times are from a Nvidia Tesla C2075.
+Trial times in the table are from a Nvidia Tesla c2075.
 
 | Batch Size | Init Learning Rate | Norm. Width | Distortion Sigma | Distortion Alpha | # itr     | val err % | test err % | min | epochs |
 |------------|--------------------|-------------|------------------|------------------|-----------|-----------|------------|-----|--------|
@@ -70,6 +70,23 @@ Trial times are from a Nvidia Tesla C2075.
 
 
 *Note: 1) the decrease in train time between data rows 4 and 5 although the batch size decreased from 100 to 50. This is due to switching to a faster convolution implementation from [cuda-convnet](https://code.google.com/p/cuda-convnet/) via [py2learn](http://benanne.github.io/2014/04/03/faster-convolutions-in-theano.html). 2) the higher errors in this table (relative to errors in the Venn Diagram and elsewhere) are due to distortion being applied to the input data for all sets during the training script (no distortion is applied outside of training). 3) Error on smaller normalized width increases, since the fixed distortion params lead to more severe distortion on smaller digits. 4) Only after the 10th data row did we stray from the learning rate hyper-parameter specified by Ciresan 2012. We adjusted the learning rate until the average ratio of the L1 norm of the gradient to L1 norm of the parameters was close to 0.001. This lead to much quicker learning (best result usually achieved around 200 epochs, and no/little improvement thereafter).*
+
+### Performance Times
+
+#### c2075
+
+2148 iters per min
+5.5 epochs per min
+
+#### m2090
+
+2107 iters per min
+5.4 epochs per min
+
+#### m2090 with *conserve_gpu_memory=1*
+
+2017 iters per min
+5.16 epochs per min
 
 ## Hyper-parameters
 
