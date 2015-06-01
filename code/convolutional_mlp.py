@@ -45,7 +45,7 @@ from mlp import HiddenLayer
 class LeNetConvPoolLayer(object):
     """Pool Layer of a convolutional network """
 
-    def __init__(self, rng, input, filter_shape, image_shape, poolsize=(2, 2), cuda_convnet=0, W=None, b=None, activation=T.tanh, border_mode='valid', pad=0):
+    def __init__(self, rng, input, filter_shape, image_shape, poolsize=(2, 2), cuda_convnet=0, W=None, b=None, activation=T.tanh, border_mode='valid', partial_sum=1, pad=0):
         """
         Allocate a LeNetConvPoolLayer with shared variable internal parameters.
 
@@ -109,7 +109,7 @@ class LeNetConvPoolLayer(object):
 
         # convolve input feature maps with filters
         if cuda_convnet:
-            conv_op = FilterActs(partial_sum=1, pad=pad)
+            conv_op = FilterActs(partial_sum=partial_sum, pad=pad)
             contiguous_input = gpu_contiguous(input)
             contiguous_filters = gpu_contiguous(self.W)
             conv_out = conv_op(contiguous_input, contiguous_filters)
