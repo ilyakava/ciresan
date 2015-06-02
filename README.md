@@ -108,3 +108,9 @@ This model has 4,741 activations (`1*29*29 + 13*13*20 + 3*3*40 + 150 + 10`).
 #### Memory and Batch size
 
 Each image per batch should take up 0.706 MB of GPU memory, so our batch size is not constrained in this case.
+
+## [References](http://yann.lecun.com/exdb/mnist/)
+
+- [Ciresan 2012 (main)](http://arxiv.org/abs/1202.2745)
+- [ICDAR 2011 (width norm details)](http://people.idsia.ch/~juergen/icdar2011a.pdf)
+- [IJCAI 2011 (distortion details)](http://people.idsia.ch/~juergen/ijcai2011.pdf)

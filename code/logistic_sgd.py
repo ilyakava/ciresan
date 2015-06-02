@@ -267,6 +267,8 @@ def load_data(dataset, normalized_width=0, out_image_size=SS, conserve_gpu_memor
         train_set = (prepare_images(train_set, out_image_size, normalized_width), train_set[1])
         valid_set = (prepare_images(valid_set, out_image_size, normalized_width), valid_set[1])
         test_set =  (prepare_images(test_set, out_image_size, normalized_width),  test_set[1])
+    else:
+        print '... skipping digit normalization and image padding'
 
     f.close()
     #train_set, valid_set, test_set format: tuple(input, target)
