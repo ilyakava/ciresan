@@ -168,14 +168,14 @@ class LogisticRegression(object):
         else:
             raise NotImplementedError()
 
-def prepare_images(sets, end_size, normalized_width):
+def prepare_digits(sets, end_size, normalized_width):
     set_x, set_y = sets[0], sets[1]
     out = numpy.ndarray((set_x.shape[0], end_size**2), dtype=numpy.float32)
 
     for i in xrange(0,set_x.shape[0]):
         x = set_x[i].reshape((SS,SS))
         if normalized_width and (set_y[i] - 1): # don't normalize images of digit '1'
-            out[i] = normalized_image(x, normalized_width, end_size).reshape(end_size**2)
+            out[i] = normalize_digit(x, normalized_width, end_size).reshape(end_size**2)
         else:
             out[i] = pad_image(x, end_size).reshape(end_size**2)
     return out
@@ -202,7 +202,7 @@ def pad_image(x, end_size):
         ei = cs + ap # end index
         return x[si:ei, si:ei].reshape(end_size**2)
 
-def normalized_image(x, normalized_width, end_size):
+def normalize_digit(x, normalized_width, end_size):
     """
     Stretches the image so that the width of the bounding box of the digit
     equals normalized_width, then resizes to end_size with pad_image
@@ -221,7 +221,8 @@ def normalized_image(x, normalized_width, end_size):
     # assert sum(sum(x) != 0) == normalized_width
     return pad_image(x, end_size)
 
-def load_data(dataset, normalized_width=0, out_image_size=SS, conserve_gpu_memory=False):
+def load_data(dataset, normalized_width=0, out_image_size=SS,
+              conserve_gpu_memory=False, center=0, image_shape=None):
     ''' Loads a dataset, and performs specified preprocessing
 
     :type dataset: string
@@ -268,9 +269,9 @@ def load_data(dataset, normalized_width=0, out_image_size=SS, conserve_gpu_memor
                 print '... normalizing digits to width %i with extra padding %i' % (normalized_width, out_image_size - SS)
             else:
                 print '... (un)padding digits from %i -> %i' % (SS, out_image_size)
-            train_set = (prepare_images(train_set, out_image_size, normalized_width), train_set[1])
-            valid_set = (prepare_images(valid_set, out_image_size, normalized_width), valid_set[1])
-            test_set =  (prepare_images(test_set, out_image_size, normalized_width),  test_set[1])
+            train_set = (prepare_digits(train_set, out_image_size, normalized_width), train_set[1])
+            valid_set = (prepare_digits(valid_set, out_image_size, normalized_width), valid_set[1])
+            test_set =  (prepare_digits(test_set, out_image_size, normalized_width),  test_set[1])
         else:
             print '... skipping digit normalization and image padding'
 
@@ -283,13 +284,24 @@ def load_data(dataset, normalized_width=0, out_image_size=SS, conserve_gpu_memor
         #target to the example with the same index in the input.
     elif data_ext == 'npz': # a dataset saved with package_data.py
         with numpy.load(dataset) as archive:
-            train_set = (archive['arr_0'], archive['arr_1'])
-            valid_set = (archive['arr_2'], archive['arr_3'])
-            test_set =  (archive['arr_4'], archive['arr_5'])
+            train_set = (numpy.asarray(archive['arr_0'], dtype=theano.config.floatX), archive['arr_1'])
+            valid_set = (numpy.asarray(archive['arr_2'], dtype=theano.config.floatX), archive['arr_3'])
+            test_set =  (numpy.asarray(archive['arr_4'], dtype=theano.config.floatX), archive['arr_5'])
     else:
-        raise ValueError("unsuported data extension %s" % data_ext)
+        raise ValueError("unsupported data extension %s" % data_ext)
 
-    def format_dataset(data_xy, borrow=True, conserve_gpu_memory=False):
+    # general pre-processing
+    if center == 1:
+        assert(image_shape)
+        print '... subtracting channel mean'
+        train_set = subtract_channel_mean(train_set, image_shape)
+        valid_set = subtract_channel_mean(valid_set, image_shape)
+        test_set = subtract_channel_mean(test_set, image_shape)
+    elif center == 2:
+        print '... subtracting mean image'
+        raise NotImplementedError()
+
+    def share_dataset(data_xy, borrow=True, conserve_gpu_memory=False):
         """ Function that casts the dataset into the right types, and
         optionally loads the entire dataset into GPU memory (shared variables)
 
@@ -323,14 +335,21 @@ def load_data(dataset, normalized_width=0, out_image_size=SS, conserve_gpu_memor
                                      borrow=borrow)
         return shared_x, T.cast(shared_y, 'int32')
 
-    test_set_x, test_set_y = format_dataset(test_set, conserve_gpu_memory=conserve_gpu_memory)
-    valid_set_x, valid_set_y = format_dataset(valid_set, conserve_gpu_memory=conserve_gpu_memory)
-    train_set_x, train_set_y = format_dataset(train_set, conserve_gpu_memory=conserve_gpu_memory)
+    test_set_x, test_set_y = share_dataset(test_set, conserve_gpu_memory=conserve_gpu_memory)
+    valid_set_x, valid_set_y = share_dataset(valid_set, conserve_gpu_memory=conserve_gpu_memory)
+    train_set_x, train_set_y = share_dataset(train_set, conserve_gpu_memory=conserve_gpu_memory)
 
     rval = [(train_set_x, train_set_y), (valid_set_x, valid_set_y),
             (test_set_x, test_set_y)]
     return rval
 
+def subtract_channel_mean(dataset, image_shape):
+    full_shape = (dataset[0].shape[0], image_shape[0], image_shape[1], image_shape[2])
+    xs = dataset[0].reshape(full_shape)
+    xs[:,:,:,0] -= numpy.mean(xs[:,:,:,0])
+    xs[:,:,:,1] -= numpy.mean(xs[:,:,:,1])
+    xs[:,:,:,2] -= numpy.mean(xs[:,:,:,2])
+    return (xs, dataset[1])
 
 def sgd_optimization_mnist(learning_rate=0.13, n_epochs=1000,
                            dataset='mnist.pkl.gz',
