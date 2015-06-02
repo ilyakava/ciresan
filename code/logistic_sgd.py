@@ -222,61 +222,72 @@ def normalized_image(x, normalized_width, end_size):
     return pad_image(x, end_size)
 
 def load_data(dataset, normalized_width=0, out_image_size=SS, conserve_gpu_memory=False):
-    ''' Loads the dataset
+    ''' Loads a dataset, and performs specified preprocessing
 
     :type dataset: string
-    :param dataset: the path to the dataset (here MNIST)
+    :param dataset: the path to the dataset
     '''
 
     #############
     # LOAD DATA #
     #############
 
-    # Download the MNIST dataset if it is not present
     data_dir, data_file = os.path.split(dataset)
-    if data_dir == "" and not os.path.isfile(dataset):
-        # Check if dataset is in the data directory.
-        new_path = os.path.join(
-            os.path.split(__file__)[0],
-            "..",
-            "data",
-            dataset
-        )
-        if os.path.isfile(new_path) or data_file == 'mnist.pkl.gz':
-            dataset = new_path
+    data_ext = '.'.join(data_file.split('.')[1:])
 
-    if (not os.path.isfile(dataset)) and data_file == 'mnist.pkl.gz':
-        import urllib
-        origin = (
-            'http://www.iro.umontreal.ca/~lisa/deep/data/mnist/mnist.pkl.gz'
-        )
-        print 'Downloading data from %s' % origin
-        urllib.urlretrieve(origin, dataset)
+    if data_file == 'mnist.pkl.gz':
+        # Download the MNIST dataset if it is not present
+        if data_dir == "" and not os.path.isfile(dataset):
+            # Check if dataset is in the data directory.
+            new_path = os.path.join(
+                os.path.split(__file__)[0],
+                "..",
+                "data",
+                dataset
+            )
+            if os.path.isfile(new_path) or data_file == 'mnist.pkl.gz':
+                dataset = new_path
+
+        if (not os.path.isfile(dataset)) and data_file == 'mnist.pkl.gz':
+            import urllib
+            origin = (
+                'http://www.iro.umontreal.ca/~lisa/deep/data/mnist/mnist.pkl.gz'
+            )
+            print 'Downloading data from %s' % origin
+            urllib.urlretrieve(origin, dataset)
 
     print '... loading data'
 
     # Load the dataset
-    f = gzip.open(dataset, 'rb')
-    train_set, valid_set, test_set = cPickle.load(f)
+    if data_file == 'mnist.pkl.gz':
+        f = gzip.open(dataset, 'rb')
+        train_set, valid_set, test_set = cPickle.load(f)
 
-    if normalized_width or (out_image_size != SS):
-        if normalized_width:
-            print '... normalizing digits to width %i with extra padding %i' % (normalized_width, out_image_size - SS)
+        if normalized_width or (out_image_size != SS):
+            if normalized_width:
+                print '... normalizing digits to width %i with extra padding %i' % (normalized_width, out_image_size - SS)
+            else:
+                print '... (un)padding digits from %i -> %i' % (SS, out_image_size)
+            train_set = (prepare_images(train_set, out_image_size, normalized_width), train_set[1])
+            valid_set = (prepare_images(valid_set, out_image_size, normalized_width), valid_set[1])
+            test_set =  (prepare_images(test_set, out_image_size, normalized_width),  test_set[1])
         else:
-            print '... (un)padding digits from %i -> %i' % (SS, out_image_size)
-        train_set = (prepare_images(train_set, out_image_size, normalized_width), train_set[1])
-        valid_set = (prepare_images(valid_set, out_image_size, normalized_width), valid_set[1])
-        test_set =  (prepare_images(test_set, out_image_size, normalized_width),  test_set[1])
-    else:
-        print '... skipping digit normalization and image padding'
+            print '... skipping digit normalization and image padding'
 
-    f.close()
-    #train_set, valid_set, test_set format: tuple(input, target)
-    #input is an numpy.ndarray of 2 dimensions (a matrix)
-    #witch row's correspond to an example. target is a
-    #numpy.ndarray of 1 dimensions (vector)) that have the same length as
-    #the number of rows in the input. It should give the target
-    #target to the example with the same index in the input.
+        f.close()
+        #train_set, valid_set, test_set format: tuple(input, target)
+        #input is an numpy.ndarray of 2 dimensions (a matrix)
+        #witch row's correspond to an example. target is a
+        #numpy.ndarray of 1 dimensions (vector)) that have the same length as
+        #the number of rows in the input. It should give the target
+        #target to the example with the same index in the input.
+    elif data_ext == 'npz': # a dataset saved with package_data.py
+        with numpy.load(dataset) as archive:
+            train_set = (archive['arr_0'], archive['arr_1'])
+            valid_set = (archive['arr_2'], archive['arr_3'])
+            test_set =  (archive['arr_4'], archive['arr_5'])
+    else:
+        raise ValueError("unsuported data extension %s" % data_ext)
 
     def format_dataset(data_xy, borrow=True, conserve_gpu_memory=False):
         """ Function that casts the dataset into the right types, and
