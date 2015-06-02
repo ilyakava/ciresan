@@ -284,9 +284,9 @@ def load_data(dataset, normalized_width=0, out_image_size=SS,
         #target to the example with the same index in the input.
     elif data_ext == 'npz': # a dataset saved with package_data.py
         with numpy.load(dataset) as archive:
-            train_set = (numpy.asarray(archive['arr_0'], dtype=theano.config.floatX), archive['arr_1'])
-            valid_set = (numpy.asarray(archive['arr_2'], dtype=theano.config.floatX), archive['arr_3'])
-            test_set =  (numpy.asarray(archive['arr_4'], dtype=theano.config.floatX), archive['arr_5'])
+            train_set = (archive['arr_0'], archive['arr_1'])
+            valid_set = (archive['arr_2'], archive['arr_3'])
+            test_set =  (archive['arr_4'], archive['arr_5'])
     else:
         raise ValueError("unsupported data extension %s" % data_ext)
 
@@ -294,12 +294,17 @@ def load_data(dataset, normalized_width=0, out_image_size=SS,
     if center == 1:
         assert(image_shape)
         print '... subtracting channel mean'
-        train_set = subtract_channel_mean(train_set, image_shape)
-        valid_set = subtract_channel_mean(valid_set, image_shape)
-        test_set = subtract_channel_mean(test_set, image_shape)
+        channel_sums = channel_sum(train_set, image_shape) + channel_sum(valid_set, image_shape) + channel_sum(test_set, image_shape)
+        channel_means = channel_sums / float(numpy.prod(image_shape) * (train_set[0].shape[0] + valid_set[0].shape[0] + test_set[0].shape[0]))
+
+        train_set = subtract_channel_mean(train_set, image_shape, channel_means)
+        valid_set = subtract_channel_mean(valid_set, image_shape, channel_means)
+        test_set = subtract_channel_mean(test_set, image_shape, channel_means)
     elif center == 2:
         print '... subtracting mean image'
         raise NotImplementedError()
+
+    print '... sharing data'
 
     def share_dataset(data_xy, borrow=True, conserve_gpu_memory=False):
         """ Function that casts the dataset into the right types, and
@@ -343,12 +348,19 @@ def load_data(dataset, normalized_width=0, out_image_size=SS,
             (test_set_x, test_set_y)]
     return rval
 
-def subtract_channel_mean(dataset, image_shape):
+def channel_sum(dataset, image_shape):
+    # Note: much quicker for simpler datatypes like uint8
     full_shape = (dataset[0].shape[0], image_shape[0], image_shape[1], image_shape[2])
     xs = dataset[0].reshape(full_shape)
-    xs[:,:,:,0] -= numpy.mean(xs[:,:,:,0])
-    xs[:,:,:,1] -= numpy.mean(xs[:,:,:,1])
-    xs[:,:,:,2] -= numpy.mean(xs[:,:,:,2])
+    return numpy.array([numpy.sum(xs[:,:,:,0]), numpy.sum(xs[:,:,:,1]), numpy.sum(xs[:,:,:,2])])
+
+def subtract_channel_mean(dataset, image_shape, channel_means):
+    full_shape = (dataset[0].shape[0], image_shape[0], image_shape[1], image_shape[2])
+    xs = numpy.asarray(dataset[0].reshape(full_shape), dtype=int) # float is too slow, int is slow enough
+    # TODO: do this with broadcasting if its better?
+    xs[:,:,:,0] -= channel_means[0]
+    xs[:,:,:,1] -= channel_means[1]
+    xs[:,:,:,2] -= channel_means[2]
     return (xs, dataset[1])
 
 def sgd_optimization_mnist(learning_rate=0.13, n_epochs=1000,
