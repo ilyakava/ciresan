@@ -355,13 +355,14 @@ def channel_sum(dataset, image_shape):
     return numpy.array([numpy.sum(xs[:,:,:,0]), numpy.sum(xs[:,:,:,1]), numpy.sum(xs[:,:,:,2])])
 
 def subtract_channel_mean(dataset, image_shape, channel_means):
+    orig_shape = dataset[0].shape
     full_shape = (dataset[0].shape[0], image_shape[0], image_shape[1], image_shape[2])
     xs = numpy.asarray(dataset[0].reshape(full_shape), dtype=int) # float is too slow, int is slow enough
     # TODO: do this with broadcasting if its better?
     xs[:,:,:,0] -= channel_means[0]
     xs[:,:,:,1] -= channel_means[1]
     xs[:,:,:,2] -= channel_means[2]
-    return (xs, dataset[1])
+    return (xs.reshape(orig_shape), dataset[1])
 
 def sgd_optimization_mnist(learning_rate=0.13, n_epochs=1000,
                            dataset='mnist.pkl.gz',
