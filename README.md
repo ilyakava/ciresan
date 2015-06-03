@@ -88,6 +88,17 @@ Trial times in the table are from a Nvidia Tesla c2075.
 2017 iters per min
 5.16 epochs per min
 
+#### GPU comparison
+
+|             | m2090 | c2075 | gtx 980 GeForce | gtx titan X |
+|-------------|-------|-------|-----------------|-------------|
+| core clock  | 650   | 575   | 1126            | 1000        |
+| thread proc | 512   | 448   |                 |             |
+| Mem GB/s    | 177.4 | 144   | 224             | 336         |
+| SP Gflops   | 1664  | 1288  | 4612            | 6144        |
+| DP Gflops   | 665   | 515   | 144             | 192         |
+
+
 ## Hyper-parameters
 
 ### Sigma in elastic distortion
