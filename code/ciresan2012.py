@@ -241,7 +241,7 @@ class Ciresan2012Column(object):
         return numpy.concatenate(test_losses)
 
     def train_column(self, init_learning_rate, n_epochs):
-        print '... training'
+        print '... training (%i iters per epoch)' % self.n_train_batches
         # early-stopping parameters
         patience = 10000  # look as this many examples regardless
         patience_increase = 2  # wait this much longer when a new best is
@@ -263,6 +263,9 @@ class Ciresan2012Column(object):
         done_looping = False
         final_learning_rate = init_learning_rate * 0.993**500
 
+        historical_costs = []
+        historical_val_losses = []
+
         while (epoch < n_epochs) and (not done_looping):
             cur_learning_rate = max(numpy.array([init_learning_rate * 0.993**epoch, final_learning_rate], dtype=numpy.float32))
             epoch = epoch + 1
@@ -271,6 +274,7 @@ class Ciresan2012Column(object):
                 iter = (epoch - 1) * self.n_train_batches + minibatch_index
 
                 cost_ij, update_ratio = self.train_model(minibatch_index, cur_learning_rate)
+                historical_costs.append([iter, cost_ij])
 
                 if iter % 100 == 0:
                     print 'training @ iter = %i. Cur learning rate (%f) is %f x optimal' % (iter, cur_learning_rate, update_ratio)
@@ -281,6 +285,7 @@ class Ciresan2012Column(object):
                     validation_losses = [self.validate_model(i) for i
                                          in xrange(self.n_valid_batches)]
                     this_validation_loss = numpy.mean(validation_losses)
+                    historical_val_losses.append([iter, this_validation_loss])
                     print('epoch %i, minibatch %i/%i, validation error %f %%' %
                           (epoch, minibatch_index + 1, self.n_train_batches,
                            this_validation_loss * 100.))
@@ -320,6 +325,7 @@ class Ciresan2012Column(object):
         print >> sys.stderr, ('The code for file ' +
                               os.path.split(__file__)[1] +
                               ' ran for %.2fm' % ((end_time - start_time) / 60.))
+        return [historical_costs, historical_val_losses]
 
     def save(self, filename=None):
         """
