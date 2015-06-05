@@ -286,9 +286,11 @@ class Ciresan2012Column(object):
                                          in xrange(self.n_valid_batches)]
                     this_validation_loss = numpy.mean(validation_losses)
                     historical_val_losses.append([iter, this_validation_loss])
-                    print('epoch %i, minibatch %i/%i, validation error %f %%' %
+                    print('     epoch %i, minibatch %i/%i, validation error %f %%' %
                           (epoch, minibatch_index + 1, self.n_train_batches,
                            this_validation_loss * 100.))
+                    mins_per_epoch = (time.clock() - start_time)/(epoch*60.)
+                    print('     averaging %f mins per epoch' % mins_per_epoch)
 
                     # if we got the best validation score until now
                     if this_validation_loss < best_validation_loss:
@@ -308,7 +310,7 @@ class Ciresan2012Column(object):
                             for i in xrange(self.n_test_batches)
                         ]
                         test_score = numpy.mean(test_losses)
-                        print(('     epoch %i, minibatch %i/%i, test error of '
+                        print(('          epoch %i, minibatch %i/%i, test error of '
                                'best model %f %%') %
                               (epoch, minibatch_index + 1, self.n_train_batches,
                                test_score * 100.))
