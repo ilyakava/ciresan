@@ -43,7 +43,7 @@ def test_columns(exclude_mode, models, dataset='mnist.pkl.gz'):
     if exclude_mode and remainder:
         print '... Excluding FIRST %i points' % remainder
         true_labels = all_datasets.values()[0][2][1][remainder:]
-    elif remainder:
+    elif remainder: # TODO: remove this, doesn't seem to make sense since the predictions would be misaligned
         print '... Excluding LAST %i points' % remainder
         true_labels = all_datasets.values()[0][2][1][:len(predictions)]
     else:

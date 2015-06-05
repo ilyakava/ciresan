@@ -222,7 +222,7 @@ def normalize_digit(x, normalized_width, end_size):
     return pad_image(x, end_size)
 
 def load_data(dataset, normalized_width=0, out_image_size=SS,
-              conserve_gpu_memory=False, center=0, image_shape=None):
+              conserve_gpu_memory=False, center=0, image_shape=None, y_values_only=False):
     ''' Loads a dataset, and performs specified preprocessing
 
     :type dataset: string
@@ -289,6 +289,10 @@ def load_data(dataset, normalized_width=0, out_image_size=SS,
             test_set =  (archive['arr_4'], archive['arr_5'])
     else:
         raise ValueError("unsupported data extension %s" % data_ext)
+
+    if y_values_only:
+        print '... returning y values'
+        return (train_set[1], valid_set[1], test_set[1])
 
     # general pre-processing
     if center == 1:
