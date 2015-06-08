@@ -294,13 +294,12 @@ def load_data(dataset, normalized_width=0, out_image_size=SS,
         print '... returning y values'
         return (train_set[1], valid_set[1], test_set[1])
 
-    # general pre-processing
+    # general pre-processing (should use information from training set only)
     if center == 1:
         assert(image_shape)
         print '... subtracting channel mean'
-        channel_sums = channel_sum(train_set, image_shape) + channel_sum(valid_set, image_shape) + channel_sum(test_set, image_shape)
-        channel_means = channel_sums / float(numpy.prod(image_shape) * (train_set[0].shape[0] + valid_set[0].shape[0] + test_set[0].shape[0]))
-        pdb.set_trace()
+        channel_means = numpy.mean(train_set[0].reshape(train_set[0].shape[0], *image_shape), axis=(0,1,2))
+        pdb.set_trace
         train_set = subtract_channel_mean(train_set, image_shape, channel_means)
         valid_set = subtract_channel_mean(valid_set, image_shape, channel_means)
         test_set = subtract_channel_mean(test_set, image_shape, channel_means)
@@ -351,12 +350,6 @@ def load_data(dataset, normalized_width=0, out_image_size=SS,
     rval = [(train_set_x, train_set_y), (valid_set_x, valid_set_y),
             (test_set_x, test_set_y)]
     return rval
-
-def channel_sum(dataset, image_shape):
-    # Note: much quicker for simpler datatypes like uint8
-    full_shape = (dataset[0].shape[0], image_shape[0], image_shape[1], image_shape[2])
-    xs = dataset[0].reshape(full_shape)
-    return numpy.array([numpy.sum(xs[:,:,:,0]), numpy.sum(xs[:,:,:,1]), numpy.sum(xs[:,:,:,2])])
 
 def subtract_channel_mean(dataset, image_shape, channel_means):
     orig_shape = dataset[0].shape
