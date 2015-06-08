@@ -300,7 +300,7 @@ def load_data(dataset, normalized_width=0, out_image_size=SS,
         print '... subtracting channel mean'
         channel_sums = channel_sum(train_set, image_shape) + channel_sum(valid_set, image_shape) + channel_sum(test_set, image_shape)
         channel_means = channel_sums / float(numpy.prod(image_shape) * (train_set[0].shape[0] + valid_set[0].shape[0] + test_set[0].shape[0]))
-
+        pdb.set_trace()
         train_set = subtract_channel_mean(train_set, image_shape, channel_means)
         valid_set = subtract_channel_mean(valid_set, image_shape, channel_means)
         test_set = subtract_channel_mean(test_set, image_shape, channel_means)
