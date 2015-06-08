@@ -222,7 +222,7 @@ def normalize_digit(x, normalized_width, end_size):
     return pad_image(x, end_size)
 
 def load_data(dataset, normalized_width=0, out_image_size=SS,
-              conserve_gpu_memory=False, center=0, image_shape=None, y_values_only=False):
+              conserve_gpu_memory=False, center=0, normalize=1, image_shape=None, y_values_only=False):
     ''' Loads a dataset, and performs specified preprocessing
 
     :type dataset: string
@@ -235,6 +235,7 @@ def load_data(dataset, normalized_width=0, out_image_size=SS,
 
     data_dir, data_file = os.path.split(dataset)
     data_ext = '.'.join(data_file.split('.')[1:])
+    input_pixel_max = 1 if data_file == 'mnist.pkl.gz' else 255
 
     if data_file == 'mnist.pkl.gz':
         # Download the MNIST dataset if it is not present
@@ -294,19 +295,30 @@ def load_data(dataset, normalized_width=0, out_image_size=SS,
         print '... returning y values'
         return (train_set[1], valid_set[1], test_set[1])
 
-    # general pre-processing
+    accuracy_dtype = int
+
+    # general pre-processing (should use information from training set only)
     if center == 1:
         assert(image_shape)
         print '... subtracting channel mean'
-        channel_sums = channel_sum(train_set, image_shape) + channel_sum(valid_set, image_shape) + channel_sum(test_set, image_shape)
-        channel_means = channel_sums / float(numpy.prod(image_shape) * (train_set[0].shape[0] + valid_set[0].shape[0] + test_set[0].shape[0]))
-
-        train_set = subtract_channel_mean(train_set, image_shape, channel_means)
-        valid_set = subtract_channel_mean(valid_set, image_shape, channel_means)
-        test_set = subtract_channel_mean(test_set, image_shape, channel_means)
+        channel_means = numpy.mean(train_set[0].reshape(train_set[0].shape[0], *image_shape), axis=(0,1,2))
+        train_set = subtract_channel_mean(train_set, image_shape, channel_means, accuracy_dtype)
+        valid_set = subtract_channel_mean(valid_set, image_shape, channel_means, accuracy_dtype)
+        test_set = subtract_channel_mean(test_set, image_shape, channel_means, accuracy_dtype)
     elif center == 2:
         print '... subtracting mean image'
         raise NotImplementedError()
+
+    if not input_pixel_max == 1:
+        if normalize == 1:
+            print '... normalizing with max channel pixel value'
+            channel_maxes = numpy.array(255 - channel_means, dtype=accuracy_dtype)
+            train_set = divide_channel_max(train_set, image_shape, channel_maxes)
+            valid_set = divide_channel_max(valid_set, image_shape, channel_maxes)
+            test_set = divide_channel_max(test_set, image_shape, channel_maxes)
+        elif normalize == 2:
+            print '... normalizing with image std deviations'
+            raise NotImplementedError()
 
     print '... sharing data'
 
@@ -352,20 +364,24 @@ def load_data(dataset, normalized_width=0, out_image_size=SS,
             (test_set_x, test_set_y)]
     return rval
 
-def channel_sum(dataset, image_shape):
-    # Note: much quicker for simpler datatypes like uint8
-    full_shape = (dataset[0].shape[0], image_shape[0], image_shape[1], image_shape[2])
-    xs = dataset[0].reshape(full_shape)
-    return numpy.array([numpy.sum(xs[:,:,:,0]), numpy.sum(xs[:,:,:,1]), numpy.sum(xs[:,:,:,2])])
-
-def subtract_channel_mean(dataset, image_shape, channel_means):
+def subtract_channel_mean(dataset, image_shape, channel_means, accuracy_dtype):
     orig_shape = dataset[0].shape
     full_shape = (dataset[0].shape[0], image_shape[0], image_shape[1], image_shape[2])
-    xs = numpy.asarray(dataset[0].reshape(full_shape), dtype=int) # float is too slow, int is slow enough
+    xs = numpy.asarray(dataset[0].reshape(full_shape), dtype=accuracy_dtype) # float is too slow, int is slow enough
     # TODO: do this with broadcasting if its better?
     xs[:,:,:,0] -= channel_means[0]
     xs[:,:,:,1] -= channel_means[1]
     xs[:,:,:,2] -= channel_means[2]
+    return (xs.reshape(orig_shape), dataset[1])
+
+def divide_channel_max(dataset, image_shape, channel_maxes):
+    orig_shape = dataset[0].shape
+    full_shape = (dataset[0].shape[0], image_shape[0], image_shape[1], image_shape[2])
+    xs = numpy.asarray(dataset[0].reshape(full_shape), dtype='float32') # float is too slow, int is slow enough
+    # TODO: do this with broadcasting if its better?
+    xs[:,:,:,0] /= channel_maxes[0]
+    xs[:,:,:,1] /= channel_maxes[1]
+    xs[:,:,:,2] /= channel_maxes[2]
     return (xs.reshape(orig_shape), dataset[1])
 
 def sgd_optimization_mnist(learning_rate=0.13, n_epochs=1000,
