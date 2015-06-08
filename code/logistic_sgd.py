@@ -299,8 +299,8 @@ def load_data(dataset, normalized_width=0, out_image_size=SS,
         assert(image_shape)
         print '... subtracting channel mean'
         channel_means = numpy.mean(train_set[0].reshape(train_set[0].shape[0], *image_shape), axis=(0,1,2))
-        pdb.set_trace
         train_set = subtract_channel_mean(train_set, image_shape, channel_means)
+        pdb.set_trace()
         valid_set = subtract_channel_mean(valid_set, image_shape, channel_means)
         test_set = subtract_channel_mean(test_set, image_shape, channel_means)
     elif center == 2:
