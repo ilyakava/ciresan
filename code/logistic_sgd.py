@@ -168,14 +168,14 @@ class LogisticRegression(object):
         else:
             raise NotImplementedError()
 
-def prepare_digits(sets, end_size, normalized_width):
+def prepare_digits(sets, end_size, digit_normalized_width):
     set_x, set_y = sets[0], sets[1]
     out = numpy.ndarray((set_x.shape[0], end_size**2), dtype=numpy.float32)
 
     for i in xrange(0,set_x.shape[0]):
         x = set_x[i].reshape((SS,SS))
-        if normalized_width and (set_y[i] - 1): # don't normalize images of digit '1'
-            out[i] = normalize_digit(x, normalized_width, end_size).reshape(end_size**2)
+        if digit_normalized_width and (set_y[i] - 1): # don't normalize images of digit '1'
+            out[i] = normalize_digit(x, digit_normalized_width, end_size).reshape(end_size**2)
         else:
             out[i] = pad_image(x, end_size).reshape(end_size**2)
     return out
@@ -202,14 +202,14 @@ def pad_image(x, end_size):
         ei = cs + ap # end index
         return x[si:ei, si:ei].reshape(end_size**2)
 
-def normalize_digit(x, normalized_width, end_size):
+def normalize_digit(x, digit_normalized_width, end_size):
     """
     Stretches the image so that the width of the bounding box of the digit
-    equals normalized_width, then resizes to end_size with pad_image
+    equals digit_normalized_width, then resizes to end_size with pad_image
 
     input x should be a square numpy array
     """
-    width_diff = normalized_width - sum(sum(x) != 0) # num non-zero col-sums (there are no discontinuous numbers)
+    width_diff = digit_normalized_width - sum(sum(x) != 0) # num non-zero col-sums (there are no discontinuous numbers)
     if width_diff:
         nd = SS + width_diff # new dim
         new_size = nd, nd
@@ -218,11 +218,11 @@ def normalize_digit(x, normalized_width, end_size):
         x = numpy.array(normalized_image.getdata(), dtype=numpy.float32).reshape((nd,nd)) / 255
     # based on my visual inspection, this assertion should pass, but doesn't
     # perhaps b/c of the smoothing that goes on with the resizing filter
-    # assert sum(sum(x) != 0) == normalized_width
+    # assert sum(sum(x) != 0) == digit_normalized_width
     return pad_image(x, end_size)
 
-def load_data(dataset, normalized_width=0, out_image_size=SS,
-              conserve_gpu_memory=False, center=0, normalize=1, image_shape=None, y_values_only=False):
+def load_data(dataset, digit_normalized_width=0, digit_out_image_size=SS,
+              conserve_gpu_memory=False, center=0, normalize=0, image_shape=None, y_values_only=False):
     ''' Loads a dataset, and performs specified preprocessing
 
     :type dataset: string
@@ -265,14 +265,14 @@ def load_data(dataset, normalized_width=0, out_image_size=SS,
         f = gzip.open(dataset, 'rb')
         train_set, valid_set, test_set = cPickle.load(f)
 
-        if normalized_width or (out_image_size != SS):
-            if normalized_width:
-                print '... normalizing digits to width %i with extra padding %i' % (normalized_width, out_image_size - SS)
+        if digit_normalized_width or (digit_out_image_size != SS):
+            if digit_normalized_width:
+                print '... normalizing digits to width %i with extra padding %i' % (digit_normalized_width, digit_out_image_size - SS)
             else:
-                print '... (un)padding digits from %i -> %i' % (SS, out_image_size)
-            train_set = (prepare_digits(train_set, out_image_size, normalized_width), train_set[1])
-            valid_set = (prepare_digits(valid_set, out_image_size, normalized_width), valid_set[1])
-            test_set =  (prepare_digits(test_set, out_image_size, normalized_width),  test_set[1])
+                print '... (un)padding digits from %i -> %i' % (SS, digit_out_image_size)
+            train_set = (prepare_digits(train_set, digit_out_image_size, digit_normalized_width), train_set[1])
+            valid_set = (prepare_digits(valid_set, digit_out_image_size, digit_normalized_width), valid_set[1])
+            test_set =  (prepare_digits(test_set, digit_out_image_size, digit_normalized_width),  test_set[1])
         else:
             print '... skipping digit normalization and image padding'
 
@@ -300,18 +300,18 @@ def load_data(dataset, normalized_width=0, out_image_size=SS,
     # general pre-processing (should use information from training set only)
     if center == 1:
         assert(image_shape)
-        print '... subtracting channel mean'
+        print '... subtracting channel means'
         channel_means = numpy.mean(train_set[0].reshape(train_set[0].shape[0], *image_shape), axis=(0,1,2))
         train_set = subtract_channel_mean(train_set, image_shape, channel_means, accuracy_dtype)
         valid_set = subtract_channel_mean(valid_set, image_shape, channel_means, accuracy_dtype)
         test_set = subtract_channel_mean(test_set, image_shape, channel_means, accuracy_dtype)
     elif center == 2:
-        print '... subtracting mean image'
+        print '... subtracting mean images'
         raise NotImplementedError()
 
     if not input_pixel_max == 1:
         if normalize == 1:
-            print '... normalizing with max channel pixel value'
+            print '... normalizing with max channel pixel values'
             channel_maxes = numpy.array(255 - channel_means, dtype=accuracy_dtype)
             train_set = divide_channel_max(train_set, image_shape, channel_maxes)
             valid_set = divide_channel_max(valid_set, image_shape, channel_maxes)
