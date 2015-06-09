@@ -322,7 +322,7 @@ def load_data(dataset, digit_normalized_width=0, digit_out_image_size=SS,
 
     print '... sharing data'
 
-    def share_dataset(data_xy, borrow=True, conserve_gpu_memory=False):
+    def share_dataset(data_xy, borrow=True, image_shape=None, conserve_gpu_memory=False):
         """ Function that casts the dataset into the right types, and
         optionally loads the entire dataset into GPU memory (shared variables)
 
@@ -333,6 +333,9 @@ def load_data(dataset, digit_normalized_width=0, digit_out_image_size=SS,
         variable) would lead to a large decrease in performance.
         """
         data_x, data_y = data_xy
+        if image_shape:
+            data_x = data_x.reshape(train_set[0].shape[0], *image_shape)
+
         if conserve_gpu_memory:
             shared_x = theano.tensor._shared(numpy.asarray(data_x,
                                                dtype=theano.config.floatX),
@@ -356,9 +359,9 @@ def load_data(dataset, digit_normalized_width=0, digit_out_image_size=SS,
                                      borrow=borrow)
         return shared_x, T.cast(shared_y, 'int32')
 
-    test_set_x, test_set_y = share_dataset(test_set, conserve_gpu_memory=conserve_gpu_memory)
-    valid_set_x, valid_set_y = share_dataset(valid_set, conserve_gpu_memory=conserve_gpu_memory)
-    train_set_x, train_set_y = share_dataset(train_set, conserve_gpu_memory=conserve_gpu_memory)
+    test_set_x, test_set_y = share_dataset(test_set, image_shape=image_shape, conserve_gpu_memory=conserve_gpu_memory)
+    valid_set_x, valid_set_y = share_dataset(valid_set, image_shape=image_shape, conserve_gpu_memory=conserve_gpu_memory)
+    train_set_x, train_set_y = share_dataset(train_set, image_shape=image_shape, conserve_gpu_memory=conserve_gpu_memory)
 
     rval = [(train_set_x, train_set_y), (valid_set_x, valid_set_y),
             (test_set_x, test_set_y)]
