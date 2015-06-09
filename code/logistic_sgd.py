@@ -334,7 +334,7 @@ def load_data(dataset, digit_normalized_width=0, digit_out_image_size=SS,
         """
         data_x, data_y = data_xy
         if image_shape:
-            data_x = data_x.reshape(train_set[0].shape[0], *image_shape)
+            data_x = data_x.reshape(data_x.shape[0], *image_shape)
 
         if conserve_gpu_memory:
             shared_x = theano.tensor._shared(numpy.asarray(data_x,
