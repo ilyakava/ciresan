@@ -303,8 +303,8 @@ def load_data(dataset, normalized_width=0, out_image_size=SS,
             name = "digit_%i" % i
             label = train_set[1][i]
             f.writerow([name, label])
-            img = train_set[0][i].reshape((128,128))
-            scipy.misc.imsave('data/digits/' + name + '.png', img)
+            img = train_set[0][i].reshape((29,29))
+            scipy.misc.imsave('data/digits29/' + name + '.png', img)
 
     print("DONE writing digits")
     pdb.set_trace()
