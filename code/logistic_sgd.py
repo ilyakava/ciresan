@@ -294,6 +294,8 @@ def load_data(dataset, normalized_width=0, out_image_size=SS,
         print '... returning y values'
         return (train_set[1], valid_set[1], test_set[1])
 
+    pdb.set_trace()
+
     # general pre-processing
     if center == 1:
         assert(image_shape)
