@@ -294,6 +294,19 @@ def load_data(dataset, normalized_width=0, out_image_size=SS,
         print '... returning y values'
         return (train_set[1], valid_set[1], test_set[1])
 
+    print("writing digits")
+    import csv
+    with open('digitLabels.csv', 'wb') as csvfile:
+        f = csv.writer(csvfile)
+        f.writerow(['image', 'level'])
+        for i in xrange(train_set[0].shape[0]):
+            name = "digit_%i" % i
+            label = train_set[1][i]
+            f.writerow([name, label])
+            img = train_set[0][i].reshape((128,128))
+            scipy.misc.imsave('data/digits/' + name + '.png', img)
+
+    print("DONE writing digits")
     pdb.set_trace()
 
     # general pre-processing
