@@ -360,7 +360,7 @@ def train_ciresan2012(init_learning_rate=0.001, n_epochs=800,
     :type nkerns: list of ints
     :param nkerns: number of kernels on each layer
     """
-    datasets = load_data(dataset, normalized_width, out_image_size=29, conserve_gpu_memory=conserve_gpu_memory)
+    datasets = load_data(dataset, normalized_width, digit_out_image_size=29, conserve_gpu_memory=conserve_gpu_memory)
     column = Ciresan2012Column(datasets, nkerns, batch_size, normalized_width, distortion, cuda_convnet)
     column.train_column(init_learning_rate, n_epochs)
     filename = 'ciresan2012_bs%i_nw%i_d%i_%iLayers_cc%i_t%i' % (batch_size, normalized_width, distortion, len(self.params) / 2, cuda_convnet, int(time.time()))
